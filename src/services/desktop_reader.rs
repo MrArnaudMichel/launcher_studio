@@ -9,11 +9,11 @@ pub struct DesktopReader;
 
 impl DesktopReader {
     pub fn user_applications_dir() -> Option<PathBuf> {
-        BaseDirs::new().map(|b| b.home_dir().join(".local/share/applications"))
+        BaseDirs::new().map(|b: BaseDirs| b.home_dir().join(".local/share/applications"))
     }
 
     pub fn list_desktop_files() -> Result<Vec<PathBuf>> {
-        let dir = match Self::user_applications_dir() {
+        let dir: PathBuf = match Self::user_applications_dir() {
             Some(p) => p,
             None => return Ok(Vec::new()),
         };
@@ -37,7 +37,6 @@ impl DesktopReader {
 }
 
 fn parse_desktop_content(content: &str) -> DesktopEntry {
-    // very simple key=value parser; ignores sections other than [Desktop Entry]
     let mut entry = DesktopEntry::default();
     let mut in_desktop = false;
     for line in content.lines() {

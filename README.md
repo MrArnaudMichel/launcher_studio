@@ -28,7 +28,9 @@ Clone the repository, compile the application, and run it:
 
 
 ```shell
-bash git clone [https://github.com/yourusername/launcher_studio.git](https://github.com/yourusername/launcher_studio.git) cd launcher_studio cargo build --release ./target/release/launcher_studio
+bash git clone [https://github.com/MrArnaudMichel/launcher_studio.git](https://github.com/MrArnaudMichel/launcher_studio.git) 
+cd launcher_studio 
+cargo build --release ./target/release/launcher_studio
 ``` 
 
 ---

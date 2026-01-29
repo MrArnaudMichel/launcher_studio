@@ -12,7 +12,7 @@ Please also read our [Code of Conduct](CODE_OF_CONDUCT.md) and [Security Policy]
 
 ### Build and Run
 ```sh
-git clone https://github.com/yourusername/launcher_studio.git
+git clone https://github.com/MrArnaudMichel/launcher_studio.git
 cd launcher_studio
 cargo run
 ```

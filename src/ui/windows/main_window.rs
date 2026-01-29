@@ -69,14 +69,50 @@ pub fn show_main_window(app: &impl IsA<Application>) {
     const NIGHT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-night-symbolic.svg");
     const SUNNY_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-sunny-symbolic.svg");
 
+    // Embedded bytes fallback: include the SVGs into the binary so the exported app
+    // can write them to a runtime-temp path if icon-theme lookup or installed files fail.
+    const NIGHT_EMBED: &'static [u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-night-symbolic.svg"));
+    const SUNNY_EMBED: &'static [u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-sunny-symbolic.svg"));
+
+    fn write_embedded_icon_file(name: &str, bytes: &[u8]) -> Option<std::path::PathBuf> {
+        // Prefer XDG_RUNTIME_DIR when available, otherwise fall back to /tmp
+        let dir = std::env::var_os("XDG_RUNTIME_DIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+        let path = dir.join(name);
+        if path.exists() {
+            return Some(path);
+        }
+        if let Some(parent) = path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        match std::fs::write(&path, bytes) {
+            Ok(_) => Some(path),
+            Err(e) => {
+                eprintln!("Failed to write embedded icon {}: {}", name, e);
+                None
+            }
+        }
+    }
+
     if file_mode {
         let path = if is_dark { SUNNY_FILE } else { NIGHT_FILE };
         if std::path::Path::new(path).exists() {
             theme_icon.set_from_file(Some(path));
         } else {
-            // Last resort: try themed names anyway
-            let fallback = if is_dark { SUNNY_NAME } else { NIGHT_NAME };
-            theme_icon.set_icon_name(Some(fallback));
+            // Try embedded bytes (for exported builds where the source tree isn't present)
+            let embed_path = if is_dark {
+                write_embedded_icon_file("launcher-studio-weather-sunny-symbolic.svg", SUNNY_EMBED)
+            } else {
+                write_embedded_icon_file("launcher-studio-weather-night-symbolic.svg", NIGHT_EMBED)
+            };
+            if let Some(ep) = embed_path {
+                if let Some(s) = ep.to_str() {
+                    theme_icon.set_from_file(Some(s));
+                }
+            } else {
+                // Last resort: try themed names anyway
+                let fallback = if is_dark { SUNNY_NAME } else { NIGHT_NAME };
+                theme_icon.set_icon_name(Some(fallback));
+            }
         }
     }
 
@@ -97,8 +133,20 @@ pub fn show_main_window(app: &impl IsA<Application>) {
             if std::path::Path::new(path).exists() {
                 theme_icon_c.set_from_file(Some(path));
             } else {
-                let name = if active { SUNNY_NAME } else { NIGHT_NAME };
-                theme_icon_c.set_icon_name(Some(name));
+                // Try embedded bytes when installed source files are not available
+                let embed_path = if active {
+                    write_embedded_icon_file("launcher-studio-weather-sunny-symbolic.svg", SUNNY_EMBED)
+                } else {
+                    write_embedded_icon_file("launcher-studio-weather-night-symbolic.svg", NIGHT_EMBED)
+                };
+                if let Some(ep) = embed_path {
+                    if let Some(s) = ep.to_str() {
+                        theme_icon_c.set_from_file(Some(s));
+                    }
+                } else {
+                    let name = if active { SUNNY_NAME } else { NIGHT_NAME };
+                    theme_icon_c.set_icon_name(Some(name));
+                }
             }
         } else {
             let name = if active { SUNNY_NAME } else { NIGHT_NAME };
