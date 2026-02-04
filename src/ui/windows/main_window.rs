@@ -711,7 +711,7 @@ pub fn show_main_window(app: &impl IsA<Application>) {
             about_win.set_application_name("Desktop Entry Manager");
             about_win.set_developer_name("Arnaud Michel");
             about_win.set_version(env!("CARGO_PKG_VERSION"));
-            about_win.set_website("https://launcherstudio.arnaudmichel.fr/");
+            about_win.set_website("https://github.com/MrArnaudMichel/launcher_studio");
             about_win.set_issue_url("https://github.com/MrArnaudMichel/launcherstudio/issues");
             about_win.present(Some(&win_for_about));
         });

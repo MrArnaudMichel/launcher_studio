@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>fr.arnaudmichel.launcherstudio</id>
+  <name>Launcher Studio</name>
+  <summary>Professional editor for your Linux application launchers</summary>
+  <summary xml:lang="fr">Éditeur professionnel pour vos lanceurs d'applications Linux</summary>
+
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+
+  <developer id="fr.arnaudmichel">
+    <name>Arnaud Michel</name>
+  </developer>
+
+  <url type="homepage">https://arnaudmichel.fr/projects/launcher-studio</url>
+  <url type="bugtracker">https://github.com/MrArnaudMichel/LauncherStudio/issues</url>
+  <url type="vcs-browser">https://github.com/MrArnaudMichel/LauncherStudio</url>
+
+  <description>
+    <p>Launcher Studio is a modern, native GTK4 application designed to simplify the creation and management of .desktop files on Linux. Whether you need to fix a broken icon or create a shortcut for a standalone AppImage, Launcher Studio provides a powerful yet simple interface.</p>
+    <p xml:lang="fr">Launcher Studio est une application GTK4 moderne et native conçue pour simplifier la création et la gestion des fichiers .desktop sous Linux. Que vous ayez besoin de corriger une icône manquante ou de créer un raccourci pour une AppImage, Launcher Studio offre une interface puissante et intuitive.</p>
+
+    <p>Key features:</p>
+    <p xml:lang="fr">Caractéristiques principales :</p>
+    <ul>
+      <li>Basic editor for name, executable path, and icon selection.</li>
+      <li xml:lang="fr">Éditeur simple pour le nom, le chemin de l'exécutable et le choix de l'icône.</li>
+      <li>Advanced settings: Categories, Keywords, MimeTypes, and Startup notifications.</li>
+      <li xml:lang="fr">Paramètres avancés : Catégories, Mots-clés, Types MIME et notifications de démarrage.</li>
+      <li>Raw Source View: Inspect and edit the .desktop file content directly.</li>
+      <li xml:lang="fr">Vue Source : Inspectez et modifiez directement le contenu du fichier .desktop.</li>
+      <li>Native integration with GNOME and Libadwaita (Dark/Light mode support).</li>
+      <li xml:lang="fr">Intégration native avec GNOME et Libadwaita (Support des modes sombre/clair).</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">fr.arnaudmichel.launcherstudio.desktop</launchable>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>The main editor interface</caption>
+      <caption xml:lang="fr">L'interface principale de l'éditeur</caption>
+      <image type="source">https://raw.githubusercontent.com/MrArnaudMichel/LauncherStudio/main/data/screenshots/main_view.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Advanced application settings</caption>
+      <caption xml:lang="fr">Paramètres d'application avancés</caption>
+      <image type="source">https://raw.githubusercontent.com/MrArnaudMichel/LauncherStudio/main/data/screenshots/advanced_settings.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Raw source code inspection</caption>
+      <caption xml:lang="fr">Inspection du code source brut</caption>
+      <image type="source">https://raw.githubusercontent.com/MrArnaudMichel/LauncherStudio/main/data/screenshots/source.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Creating a new launcher entry</caption>
+      <caption xml:lang="fr">Création d'un nouveau lanceur</caption>
+      <image type="source">https://raw.githubusercontent.com/MrArnaudMichel/LauncherStudio/main/data/screenshots/blank_entry.png</image>
+    </screenshot>
+  </screenshots>
+
+  <releases>
+    <release version="0.1.0" date="2026-02-04">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.0</url>
+      <description>
+        <p>Initial public release of Launcher Studio.</p>
+        <p xml:lang="fr">Première version publique de Launcher Studio.</p>
+      </description>
+    </release>
+  </releases>
+
+  <content_rating type="oars-1.1"/>
+
+  <branding>
+    <color type="primary" scheme_preference="light">#4a90e2</color>
+    <color type="primary" scheme_preference="dark">#1a5490</color>
+  </branding>
+
+  <categories>
+    <category>Settings</category>
+    <category>Development</category>
+    <category>Utility</category>
+  </categories>
+</component>

@@ -29,4 +29,4 @@ Original text courtesy of the [Speak Up! project](http://web.archive.org/web/201
 
 ## Questions?
 
-If you have questions, please see [Faq](https://launcherstudio.arnaudmichel.fr/). If that doesn't answer your questions, feel free to [contact us](mailto:contact@arnaudmichel.fr).
+If you have questions, please see [Faq](https://github.com/MrArnaudMichel/launcher_studio). If that doesn't answer your questions, feel free to [contact us](mailto:contact@arnaudmichel.fr).

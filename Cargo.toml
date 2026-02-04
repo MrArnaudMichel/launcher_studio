@@ -22,13 +22,13 @@ license-file = ["LICENSE"]
 extended-description = "Launcher Studio is a GTK4 application that helps you create and manage .desktop launcher files.\n\nIt provides an easy editor for Name, Comment, Exec, Icon, Categories and more, so you can quickly create launchers for your apps without dealing with syntax errors."
 assets = [
     # .desktop file
-    ["data/launcher_studio.desktop", "/usr/share/applications/launcher_studio.desktop", "644"],
+    ["data/fr.arnaudmichel.launcherstudio.desktop", "/usr/share/applications/launcher_studio.desktop", "644"],
     # AppStream metadata
-    ["data/launcher_studio.metainfo.xml", "/usr/share/metainfo/launcher_studio.metainfo.xml", "644"],
+    ["data/fr.arnaudmichel.launcherstudio.metainfo.xml", "/usr/share/metainfo/launcher_studio.metainfo.xml", "644"],
     # App icon (rename target to match icon name without spaces)
-    ["assets/Launcher Studio Logo Design.png", "/usr/share/icons/hicolor/512x512/apps/launcher_studio.png", "644"],
+    ["assets/icons/fr.arnaudmichel.launcherstudio.png", "/usr/share/icons/hicolor/512x512/apps/launcher_studio.png", "644"],
     # Bundled symbolic icons for theme toggle
     ["assets/icons/launcher-studio-weather-night-symbolic.svg", "/usr/share/icons/hicolor/symbolic/apps/launcher-studio-weather-night-symbolic.svg", "644"],
     ["assets/icons/launcher-studio-weather-sunny-symbolic.svg", "/usr/share/icons/hicolor/symbolic/apps/launcher-studio-weather-sunny-symbolic.svg", "644"],
 ]
-copyright = "© 2025 Arnaud Michel"
+copyright = "© 2026 Arnaud Michel"
