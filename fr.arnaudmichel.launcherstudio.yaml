@@ -42,6 +42,8 @@ modules:
       - install -D assets/icons/launcher-studio-weather-sunny-symbolic.svg /app/share/icons/hicolor/symbolic/apps/launcher-studio-weather-sunny-symbolic.svg
 
     sources:
-      - type: dir
-        path: .
+      - type: git
+        url: https://github.com/MrArnaudMichel/launcher_studio.git
+        tag: v0.1.0
+        commit: dd4c91ae07d4158f7cb59c6bd709c063750cc6e7
       - cargo-sources.json
