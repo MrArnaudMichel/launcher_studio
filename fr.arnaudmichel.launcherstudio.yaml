@@ -37,7 +37,7 @@ modules:
       - install -D target/release/launcher_studio /app/bin/launcher_studio
       - install -D data/fr.arnaudmichel.launcherstudio.desktop /app/share/applications/fr.arnaudmichel.launcherstudio.desktop
       - install -D data/fr.arnaudmichel.launcherstudio.metainfo.xml /app/share/metainfo/fr.arnaudmichel.launcherstudio.metainfo.xml
-      - install -D "assets/Launcher Studio Logo Design.png" /app/share/icons/hicolor/512x512/apps/fr.arnaudmichel.launcherstudio.png
+      - install -D "assets/icons/fr.arnaudmichel.launcherstudio.png" /app/share/icons/hicolor/512x512/apps/fr.arnaudmichel.launcherstudio.png
       - install -D assets/icons/launcher-studio-weather-night-symbolic.svg /app/share/icons/hicolor/symbolic/apps/launcher-studio-weather-night-symbolic.svg
       - install -D assets/icons/launcher-studio-weather-sunny-symbolic.svg /app/share/icons/hicolor/symbolic/apps/launcher-studio-weather-sunny-symbolic.svg
 
@@ -45,5 +45,5 @@ modules:
       - type: git
         url: https://github.com/MrArnaudMichel/launcher_studio.git
         tag: v0.1.0
-        commit: dd4c91ae07d4158f7cb59c6bd709c063750cc6e7
+        commit: af95b061ef935cfc956c35ccd57cf0e0b1c12e17
       - cargo-sources.json
