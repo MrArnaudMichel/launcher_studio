@@ -2,28 +2,28 @@ use std::fmt::Write as _;
 
 #[derive(Debug, Clone, Default)]
 pub struct DesktopEntry {
-    pub type_field: String,           // Type
-    pub name: String,                 // Name
-    pub generic_name: Option<String>, // GenericName
-    pub comment: Option<String>,      // Comment
-    pub exec: String,                 // Exec
-    pub icon: Option<String>,         // Icon
-    pub terminal: bool,               // Terminal
-    pub categories: Vec<String>,      // Categories (semicolon-separated)
-    pub mime_type: Vec<String>,       // MimeType (semicolon-separated)
-    pub keywords: Vec<String>,        // Keywords (semicolon-separated)
-    pub only_show_in: Vec<String>,    // OnlyShowIn
-    pub not_show_in: Vec<String>,     // NotShowIn
-    pub no_display: bool,             // NoDisplay
-    pub startup_notify: bool,         // StartupNotify
-    pub try_exec: Option<String>,     // TryExec
-    pub path: Option<String>,         // Path (WorkingDirectory)
-    pub url: Option<String>,          // For Type=Link
-    pub actions: Vec<String>,         // Actions (names)
-    pub extra: Vec<(String, String)>, // Any extra key=value
+    pub type_field: String,
+    pub name: String,
+    pub generic_name: Option<String>,
+    pub comment: Option<String>,
+    pub exec: String,
+    pub icon: Option<String>,
+    pub terminal: bool,
+    pub categories: Vec<String>,
+    pub mime_type: Vec<String>,
+    pub keywords: Vec<String>,
+    pub only_show_in: Vec<String>,
+    pub not_show_in: Vec<String>,
+    pub no_display: bool,
+    pub startup_notify: bool,
+    pub try_exec: Option<String>,
+    pub path: Option<String>,
+    pub url: Option<String>,
+    pub actions: Vec<String>,
+    pub extra: Vec<(String, String)>,
 
     // Localized variants
-    pub name_localized: Vec<(String, String)>,        // (lang, value) => Name[fr]=...
+    pub name_localized: Vec<(String, String)>,
     pub generic_name_localized: Vec<(String, String)>,
     pub comment_localized: Vec<(String, String)>,
 }
@@ -123,6 +123,5 @@ impl DesktopEntry {
 }
 
 fn escape(input: &str) -> String {
-    // Per .desktop, use plain strings; escape newlines as \n
     input.replace('\n', "\\n")
 }
