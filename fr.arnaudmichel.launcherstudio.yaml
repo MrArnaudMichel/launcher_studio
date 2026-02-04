@@ -16,7 +16,6 @@ finish-args:
   - --socket=wayland
   - --device=dri
   - --filesystem=xdg-data/applications:create
-  - --filesystem=/usr/share/applications:ro
   - --filesystem=/var/lib/flatpak/exports/share/applications:ro
   - --filesystem=xdg-data/flatpak/exports/share/applications:ro
 
