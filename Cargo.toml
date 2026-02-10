@@ -18,16 +18,27 @@ open = "5.3.2"
 maintainer = "Arnaud Michel <contact@arnaudmichel.fr>"
 section = "utils"
 priority = "optional"
+
 license-file = ["LICENSE"]
-extended-description = "Launcher Studio is a GTK4 application that helps you create and manage .desktop launcher files.\n\nIt provides an easy editor for Name, Comment, Exec, Icon, Categories and more, so you can quickly create launchers for your apps without dealing with syntax errors."
+depends = "libgtk-4-1, libadwaita-1-0"
+extended-description = """Launcher Studio is a modern GTK4 application designed to simplify the creation and management of .desktop launcher files on Linux.
+
+It provides an intuitive editor for application name, comment, executable path, icon, categories, keywords, MIME types, and startup options. An advanced raw source view allows direct inspection and editing of the underlying .desktop file.
+
+Launcher Studio integrates natively with GNOME and Libadwaita, supporting both light and dark modes.
+"""
+
 assets = [
-    # .desktop file
-    ["data/fr.arnaudmichel.launcherstudio.desktop", "/usr/share/applications/launcher_studio.desktop", "644"],
+    # Desktop entry
+    ["data/fr.arnaudmichel.launcherstudio.desktop", "/usr/share/applications/fr.arnaudmichel.launcherstudio.desktop", "644"],
+
     # AppStream metadata
-    ["data/fr.arnaudmichel.launcherstudio.metainfo.xml", "/usr/share/metainfo/launcher_studio.metainfo.xml", "644"],
-    # App icon (rename target to match icon name without spaces)
-    ["assets/icons/fr.arnaudmichel.launcherstudio.png", "/usr/share/icons/hicolor/512x512/apps/launcher_studio.png", "644"],
-    # Bundled symbolic icons for theme toggle
+    ["data/fr.arnaudmichel.launcherstudio.metainfo.xml", "/usr/share/metainfo/fr.arnaudmichel.launcherstudio.metainfo.xml", "644"],
+
+    # Application icon (must match desktop + AppStream ID)
+    ["assets/icons/fr.arnaudmichel.launcherstudio.png", "/usr/share/icons/hicolor/512x512/apps/fr.arnaudmichel.launcherstudio.png", "644"],
+
+    # Symbolic icons
     ["assets/icons/launcher-studio-weather-night-symbolic.svg", "/usr/share/icons/hicolor/symbolic/apps/launcher-studio-weather-night-symbolic.svg", "644"],
     ["assets/icons/launcher-studio-weather-sunny-symbolic.svg", "/usr/share/icons/hicolor/symbolic/apps/launcher-studio-weather-sunny-symbolic.svg", "644"],
 ]
