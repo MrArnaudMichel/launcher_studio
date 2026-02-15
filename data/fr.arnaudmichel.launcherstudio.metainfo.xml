@@ -60,19 +60,19 @@
   </screenshots>
 
   <releases>
+    <release version="0.1.1" date="2026-02-15">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.1</url>
+      <description>
+        <p>Update application summary for clarity and conciseness</p>
+        <p xml:lang="fr">Mise à jour du résumé de l'application pour plus de clarté et de concision</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-02-04">
       <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.0</url>
       <description>
         <p>Initial public release of Launcher Studio.</p>
         <p xml:lang="fr">Première version publique de Launcher Studio.</p>
       </description>
-    </release>
-    <release version="0.1.1" date="2026-02-15">
-      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.1</url>
-        <description>
-            <p>Update application summary for clarity and conciseness</p>
-            <p xml:lang="fr">Mise à jour du résumé de l'application pour plus de clarté et de concision</p>
-        </description>
     </release>
   </releases>
 
