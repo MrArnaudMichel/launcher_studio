@@ -2,8 +2,8 @@
 <component type="desktop-application">
   <id>fr.arnaudmichel.launcherstudio</id>
   <name>Launcher Studio</name>
-  <summary>Professional editor for your Linux application launchers</summary>
-  <summary xml:lang="fr">Éditeur professionnel pour vos lanceurs d'applications Linux</summary>
+  <summary>Create Linux app launchers</summary>
+  <summary xml:lang="fr">Créer des raccourcis Linux</summary>
 
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
@@ -66,6 +66,13 @@
         <p>Initial public release of Launcher Studio.</p>
         <p xml:lang="fr">Première version publique de Launcher Studio.</p>
       </description>
+    </release>
+    <release version="0.1.1" date="2026-02-15">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.1</url>
+        <description>
+            <p>Update application summary for clarity and conciseness</p>
+            <p xml:lang="fr">Mise à jour du résumé de l'application pour plus de clarté et de concision</p>
+        </description>
     </release>
   </releases>
 
