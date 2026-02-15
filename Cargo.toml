@@ -1,6 +1,6 @@
 [package]
 name = "launcher_studio"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 description = "Launcher Studio: A GTK4 app for creating and managing .desktop files on Linux."
 license = "MIT"
