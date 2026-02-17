@@ -60,6 +60,13 @@
   </screenshots>
 
   <releases>
+    <release version="0.1.2" date="2026-02-16">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.2</url>
+        <description>
+        <p>Update open file system dialog to set the initial directory to the user's home folder for better user experience.</p>
+        <p xml:lang="fr">Mise à jour de la boîte de dialogue d'ouverture de fichier pour définir le répertoire initial sur le dossier personnel de l'utilisateur pour une meilleure expérience utilisateur.</p>
+      </description>
+    </release>
     <release version="0.1.1" date="2026-02-15">
       <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.1</url>
       <description>
