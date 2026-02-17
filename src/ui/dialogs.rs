@@ -16,26 +16,43 @@ pub fn show_error<W: IsA<Window>>(parent: &W, msg: &str) {
 
 pub fn show_about<W: IsA<gtk4::Widget>>(parent: &W) {
     let about = AboutDialog::new();
-    about.set_application_name("Desktop Entry Manager");
+    about.set_application_name("Launcher Studio");
     about.set_developer_name("Arnaud Michel");
     about.set_version(env!("CARGO_PKG_VERSION"));
-    about.set_website("https://github.com/MrArnaudMichel/launcher_studio");
+    about.set_license_type(gtk4::License::MitX11);
+    about.set_application_icon("fr.arnaudmichel.launcherstudio");
+    about.set_website("https://github.com/MrArnaudMichel/launcherstudio");
     about.set_issue_url("https://github.com/MrArnaudMichel/launcherstudio/issues");
     about.present(Some(parent));
 }
 
-pub fn show_credits<W: IsA<Window>>(parent: &W) {
-    let text = "Desktop Entry Manager\n\nCredits:\n- Author: Arnaud Michel\n- UI: GTK4 + Libadwaita";
-    let dialog = gtk4::MessageDialog::builder()
-        .transient_for(parent)
-        .modal(true)
-        .title("Credits")
-        .text("Thanks for using Desktop Entry Manager")
-        .secondary_text(text)
-        .build();
-    dialog.add_button("Close", ResponseType::Close);
-    dialog.connect_response(|d, _| d.close());
-    dialog.show();
+pub fn show_credits<W: IsA<gtk4::Widget>>(parent: &W) {
+    let about = AboutDialog::new();
+    about.set_application_name("Launcher Studio");
+    about.set_application_icon("fr.arnaudmichel.launcherstudio");
+
+    about.set_developers(&[
+        "Arnaud Michel https://github.com/MrArnaudMichel",
+    ]);
+
+    about.add_credit_section(
+        Some("Special Thanks"),
+        &[
+            "The GTK/GNOME community",
+            "Project contributors",
+        ],
+    );
+
+    about.add_credit_section(
+        Some("Libraries"),
+        &[
+            "GTK4 https://gtk.org",
+            "GTK-RS https://gtk-rs.org",
+            "libadwaita https://gnome.pages.gitlab.gnome.org/libadwaita/",
+        ],
+    );
+
+    about.present(Some(parent));
 }
 
 pub fn confirm_delete<W: IsA<Window>, F>(parent: &W, path: &std::path::Path, on_confirm: F)

@@ -19,7 +19,6 @@ pub fn show_main_window(app: &impl IsA<Application>) {
     setup_css();
     let header = AdwHeaderBar::new();
     header.pack_end(&theme::create_theme_button());
-    header.add_css_class("flat");
     let root = GtkBox::new(Orientation::Vertical, 6);
     root.set_margin_top(0);
     root.set_margin_bottom(12);

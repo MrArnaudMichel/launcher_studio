@@ -1,6 +1,6 @@
 [package]
 name = "launcher_studio"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2024"
 description = "Launcher Studio: A GTK4 app for creating and managing .desktop files on Linux."
 license = "MIT"
@@ -12,7 +12,7 @@ gtk4 = "0.10.1"
 adw = { package = "libadwaita", version = "0.8.0", features = ["v1_6"] }
 gio = "0.21.2"
 directories = "6.0.0"
-open = "5.3.2"
+open = "5.3.3"
 
 [package.metadata.deb]
 maintainer = "Arnaud Michel <contact@arnaudmichel.fr>"

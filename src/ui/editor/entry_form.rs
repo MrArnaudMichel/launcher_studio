@@ -142,14 +142,14 @@ fn build_exec_row(exec_entry: &Entry, url_entry: &Entry, type_combo: &ComboBoxTe
     let link_box = GtkBox::new(Orientation::Horizontal, 6);
     link_box.set_hexpand(true);
     link_box.append(url_entry);
-    let url_btn = Button::with_label("Parcourir...");
+    let url_btn = Button::with_label("Browse...");
     {
         let u = url_entry.clone();
         let tc = type_combo.clone();
         url_btn.connect_clicked(move |_| {
             let is_dir = tc.active_text().map(|s| s == "Directory").unwrap_or(false);
             let action = if is_dir { FileChooserAction::SelectFolder } else { FileChooserAction::Open };
-            show_file_chooser(&u, if is_dir { "Sélectionner un dossier" } else { "Sélectionner" }, action, true);
+            show_file_chooser(&u, if is_dir { "Select Folder" } else { "Select" }, action, true);
         });
     }
     link_box.append(&url_btn);
@@ -184,6 +184,10 @@ fn show_file_chooser(entry: &Entry, title: &str, action: FileChooserAction, pref
         Some(title), None::<&gtk4::ApplicationWindow>, action,
         &[("Cancel", gtk4::ResponseType::Cancel), ("Open", gtk4::ResponseType::Accept)],
     );
+    // Set initial folder to user's home directory
+    if let Some(home_dir) = std::env::var_os("HOME") {
+        dialog.set_current_folder(Some(&File::for_path(home_dir))).expect("Failed to set initial folder");
+    }
     let e = entry.clone();
     dialog.connect_response(move |d, resp| {
         if resp == gtk4::ResponseType::Accept {
