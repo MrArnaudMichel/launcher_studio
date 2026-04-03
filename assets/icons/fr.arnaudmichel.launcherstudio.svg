@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="128" height="128" id="svg11300" version="1.0" style="display:inline;enable-background:new" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <title id="title4162">Adwaita Icon Template</title>
+  <g id="layer1" style="display:inline" transform="translate(0,-172)">
+    <g id="layer9" style="display:inline"/>
+    <g id="layer3" style="display:inline">
+      <rect ry="8" rx="8" y="187" x="12.532" height="103.01" width="103.01" id="rect-1" style="display: inline; vector-effect: none; fill-opacity: 1; stroke-miterlimit: 4; stroke-opacity: 1; marker: none; paint-order: fill; stroke-width: 5; fill: rgb(26, 95, 180);"/>
+      <rect ry="8" rx="8" y="184.49524" x="12.532" height="103.00952" width="103.00952" id="rect2896" style="display: inline; vector-effect: none; fill-opacity: 1; stroke-miterlimit: 4; stroke-opacity: 1; marker: none; fill: rgb(53, 132, 228); paint-order: fill; stroke-width: 5px;"/>
+      <rect x="22" y="194" width="38" height="38" style="fill: rgb(255, 255, 255);" rx="6" ry="6"/>
+      <rect x="22" y="241" width="38" height="38" style="fill: rgb(255, 255, 255); stroke-width: 1;" rx="6" ry="6"/>
+      <rect x="68" y="194" width="38" height="38" style="fill: rgb(255, 255, 255); stroke-width: 1;" rx="6" ry="6"/>
+      <rect x="68" y="241" width="38" height="38" style="fill: rgb(255, 255, 255); stroke-width: 1;" rx="6" ry="6"/>
+      <ellipse style="fill: rgb(255, 255, 255); stroke: rgb(53, 132, 228); stroke-width: 8px;" cx="64" cy="237" rx="19" ry="19"/>
+    </g>
+  </g>
+</svg>

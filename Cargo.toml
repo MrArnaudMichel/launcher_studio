@@ -7,10 +7,10 @@ license = "MIT"
 authors = ["Arnaud Michel <contact@arnaudmichel.fr>"]
 
 [dependencies]
-anyhow = "1.0.100"
-gtk4 = "0.10.1"
-adw = { package = "libadwaita", version = "0.8.0", features = ["v1_6"] }
-gio = "0.21.2"
+anyhow = "1.0.102"
+gtk4 = "0.11.1"
+adw = { package = "libadwaita", version = "0.9.1", features = ["v1_6"] }
+gio = "0.22.2"
 directories = "6.0.0"
 open = "5.3.3"
 
@@ -36,7 +36,7 @@ assets = [
     ["data/fr.arnaudmichel.launcherstudio.metainfo.xml", "/usr/share/metainfo/fr.arnaudmichel.launcherstudio.metainfo.xml", "644"],
 
     # Application icon (must match desktop + AppStream ID)
-    ["assets/icons/fr.arnaudmichel.launcherstudio.png", "/usr/share/icons/hicolor/512x512/apps/fr.arnaudmichel.launcherstudio.png", "644"],
+    ["assets/icons/fr.arnaudmichel.launcherstudio.svg", "/usr/share/icons/hicolor/512x512/apps/fr.arnaudmichel.launcherstudio.svg", "644"],
 
     # Symbolic icons
     ["assets/icons/launcher-studio-weather-night-symbolic.svg", "/usr/share/icons/hicolor/symbolic/apps/launcher-studio-weather-night-symbolic.svg", "644"],
