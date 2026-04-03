@@ -163,6 +163,8 @@ fn build_dynamic_exec_row(lbl: &Label, app_box: &GtkBox, link_box: &GtkBox) -> G
     row.append(link_box);
     row
 }
+use crate::ui::editor::icon_picker::IconPickerDialog;
+
 fn build_icon_row(icon_entry: &Entry) -> GtkBox {
     let row = GtkBox::new(Orientation::Horizontal, 8);
     let lbl = Label::new(Some("Icon"));
@@ -171,12 +173,29 @@ fn build_icon_row(icon_entry: &Entry) -> GtkBox {
     lbl.set_width_chars(18);
     row.append(&lbl);
     row.append(icon_entry);
-    let btn = Button::with_label("Select...");
+
+    let btn_browse = Button::with_label("Browse...");
     {
         let e = icon_entry.clone();
-        btn.connect_clicked(move |_| show_file_chooser(&e, "Select Icon", FileChooserAction::Open, false));
+        btn_browse.connect_clicked(move |_| show_file_chooser(&e, "Select Icon File", FileChooserAction::Open, false));
     }
-    row.append(&btn);
+    row.append(&btn_browse);
+
+    let btn_picker = Button::with_label("System Icons...");
+    {
+        let e = icon_entry.clone();
+        btn_picker.connect_clicked(move |btn| {
+            let picker = IconPickerDialog::new(btn.root().and_downcast_ref::<gtk4::Window>());
+            let e_clone = e.clone();
+            picker.run(move |selected| {
+                if let Some(name) = selected {
+                    e_clone.set_text(&name);
+                }
+            });
+        });
+    }
+    row.append(&btn_picker);
+
     row
 }
 fn show_file_chooser(entry: &Entry, title: &str, action: FileChooserAction, prefix_file: bool) {

@@ -36,5 +36,3 @@ cargo build --release ./target/release/launcher_studio
 ## License
 
 This application is licensed under the [**MIT License**](LICENSE), allowing free use for personal or commercial purposes.
-
-echo "deb [trusted=yes] https://github.com/MrArnaudMichel/launcher_studio ./" | sudo tee /etc/apt/sources.list.d/launcherstudio.list
