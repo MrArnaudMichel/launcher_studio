@@ -74,7 +74,7 @@ impl DesktopEntry {
             let _ = writeln!(&mut s, "Comment[{}]={}", lang, escape(val));
         }
         if self.type_field == "Application" && !self.exec.is_empty() {
-            let _ = writeln!(&mut s, "Exec={}", self.exec.trim());
+            let _ = writeln!(&mut s, "Exec={}", normalize_exec(self.exec.trim()));
         }
         if self.type_field == "Application"
             && let Some(v) = &self.try_exec
@@ -227,9 +227,36 @@ fn push_localized(vec: &mut Vec<(String, String)>, key: &str, prefix: &str, val:
     vec.push((lang, val.to_string()));
 }
 
+fn normalize_exec(exec: &str) -> String {
+    if exec.is_empty() {
+        return String::new();
+    }
+
+    // Keep expert input untouched when it already starts as a quoted command.
+    if exec.starts_with('"') || exec.starts_with('\'') {
+        return exec.to_string();
+    }
+
+    if let Some(appimage_idx) = exec.find(".AppImage") {
+        let end = appimage_idx + ".AppImage".len();
+        let (candidate, rest) = exec.split_at(end);
+        let candidate_trimmed = candidate.trim();
+        let looks_like_path = candidate_trimmed.starts_with('/')
+            || candidate_trimmed.starts_with("./")
+            || candidate_trimmed.starts_with("~/");
+        let needs_quotes = candidate_trimmed.contains(char::is_whitespace);
+
+        if looks_like_path && needs_quotes {
+            return format!("\"{}\"{}", candidate_trimmed, rest);
+        }
+    }
+
+    exec.to_string()
+}
+
 #[cfg(test)]
 mod tests {
-    use super::DesktopEntry;
+    use super::{DesktopEntry, normalize_exec};
 
     #[test]
     fn parse_ini_entry() {
@@ -261,5 +288,22 @@ mod tests {
         assert_eq!(reparsed.name, "Docs");
         assert_eq!(reparsed.url.as_deref(), Some("https://example.org"));
         assert!(reparsed.no_display);
+    }
+
+    #[test]
+    fn normalize_exec_quotes_spaced_appimage_path() {
+        let src = "/home/user/My Tools/r2d3.AppImage --minimized";
+        let normalized = normalize_exec(src);
+        assert_eq!(
+            normalized,
+            "\"/home/user/My Tools/r2d3.AppImage\" --minimized"
+        );
+    }
+
+    #[test]
+    fn normalize_exec_keeps_regular_command() {
+        let src = "firefox --new-window";
+        let normalized = normalize_exec(src);
+        assert_eq!(normalized, src);
     }
 }

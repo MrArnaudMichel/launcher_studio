@@ -8,6 +8,7 @@ use gtk4::{
     FileChooserDialog, Label, Notebook, Orientation, ScrolledWindow, TextView,
 };
 use std::cell::RefCell;
+use std::fs;
 use std::rc::Rc;
 pub struct Editor {
     pub notebook: Notebook,
@@ -243,9 +244,7 @@ fn build_exec_row(
     let exec_btn = Button::with_label("Select...");
     {
         let e = exec_entry.clone();
-        exec_btn.connect_clicked(move |_| {
-            show_file_chooser(&e, "Select Executable", FileChooserAction::Open, false)
-        });
+        exec_btn.connect_clicked(move |_| show_exec_file_chooser(&e));
     }
     app_box.append(&exec_btn);
     let link_box = GtkBox::new(Orientation::Horizontal, 6);
@@ -301,7 +300,7 @@ fn build_icon_row(icon_entry: &Entry) -> GtkBox {
     }
     row.append(&btn_browse);
 
-    let btn_picker = Button::with_label("System Icons...");
+    let btn_picker = Button::with_label("Lucide Icons...");
     {
         let e = icon_entry.clone();
         btn_picker.connect_clicked(move |btn| {
@@ -350,6 +349,62 @@ fn show_file_chooser(entry: &Entry, title: &str, action: FileChooserAction, pref
         d.close();
     });
     dialog.show();
+}
+
+fn show_exec_file_chooser(entry: &Entry) {
+    let parent_window = entry.root().and_downcast::<gtk4::Window>();
+    let dialog = FileChooserDialog::new(
+        Some("Select Executable"),
+        parent_window.as_ref(),
+        FileChooserAction::Open,
+        &[
+            ("Cancel", gtk4::ResponseType::Cancel),
+            ("Open", gtk4::ResponseType::Accept),
+        ],
+    );
+
+    if let Some(home_dir) = std::env::var_os("HOME") {
+        dialog
+            .set_current_folder(Some(&File::for_path(home_dir)))
+            .expect("Failed to set initial folder");
+    }
+
+    let e = entry.clone();
+    dialog.connect_response(move |d, resp| {
+        if resp == gtk4::ResponseType::Accept
+            && let Some(file) = d.file()
+            && let Some(path) = file.path()
+        {
+            ensure_executable_if_appimage(&path);
+            e.set_text(&path.to_string_lossy());
+        }
+        d.close();
+    });
+    dialog.show();
+}
+
+fn ensure_executable_if_appimage(path: &std::path::Path) {
+    if !path
+        .extension()
+        .and_then(|s| s.to_str())
+        .map(|s| s.eq_ignore_ascii_case("appimage"))
+        .unwrap_or(false)
+    {
+        return;
+    }
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if let Ok(metadata) = fs::metadata(path) {
+            let mut perms = metadata.permissions();
+            let mode = perms.mode();
+            if mode & 0o111 == 0 {
+                perms.set_mode(mode | 0o755);
+                let _ = fs::set_permissions(path, perms);
+            }
+        }
+    }
 }
 fn setup_icon_preview(entry: &Entry) {
     entry.connect_changed(move |e| {

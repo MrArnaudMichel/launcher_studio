@@ -13,6 +13,8 @@
 - Centralized `.desktop` parsing in `DesktopEntry`
 - Parser and writer unit tests for round-trip and sanitization
 - Icon service caching to reduce repeated theme scans
+- AppImage-friendly executable picker (auto chmod + executable-safe Exec output)
+- Lucide icon search with local SVG download for persistent .desktop icons
 
 ## Features
 

@@ -13,6 +13,8 @@ adw = { package = "libadwaita", version = "0.9.1", features = ["v1_6"] }
 gio = "0.22.2"
 directories = "6.0.0"
 open = "5.3.3"
+reqwest = { version = "0.12.24", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+serde = { version = "1.0.228", features = ["derive"] }
 
 [package.metadata.deb]
 maintainer = "Arnaud Michel <contact@arnaudmichel.fr>"
