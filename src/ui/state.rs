@@ -8,6 +8,7 @@ pub struct UiState {
     pub selected_path: Option<PathBuf>,
     pub in_edit: bool,
     pub temp_row: Option<ListBoxRow>,
+    pub is_dirty: bool,
 }
 
 pub type SharedState = Rc<RefCell<UiState>>;

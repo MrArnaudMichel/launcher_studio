@@ -1,7 +1,7 @@
 pub mod menu_bar;
-pub mod toolbar;
-pub mod status_bar;
 pub mod sidebar;
+pub mod status_bar;
+pub mod toolbar;
 
 use gtk4::prelude::*;
 use gtk4::{Box as GtkBox, Entry, Label, Orientation};
@@ -16,4 +16,3 @@ pub fn labeled_entry_with(label: &str, entry: &Entry) -> GtkBox {
     row.append(entry);
     row
 }
-

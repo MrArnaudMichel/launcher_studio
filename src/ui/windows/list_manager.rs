@@ -1,9 +1,9 @@
-use gtk4::{Box as GtkBox, Image, Label, ListBox, ListBoxRow, Orientation};
-use gtk4::prelude::*;
-use std::path::PathBuf;
 use crate::services::desktop_reader::DesktopReader;
-use crate::ui::state::SharedState;
 use crate::ui::editor::entry_form::{EntryWidgets, set_form_from_entry};
+use crate::ui::state::SharedState;
+use gtk4::prelude::*;
+use gtk4::{Box as GtkBox, Image, Label, ListBox, ListBoxRow, Orientation};
+use std::path::{Path, PathBuf};
 pub fn refresh_desktop_list(
     listbox: &ListBox,
     state: &SharedState,
@@ -19,7 +19,10 @@ pub fn refresh_desktop_list(
                 let (name, icon_str) = match DesktopReader::read_from_path(&path) {
                     Ok(de) => (de.name, de.icon),
                     Err(_) => (
-                        path.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string(),
+                        path.file_stem()
+                            .and_then(|s| s.to_str())
+                            .unwrap_or("")
+                            .to_string(),
                         None,
                     ),
                 };
@@ -34,7 +37,7 @@ pub fn refresh_desktop_list(
         Err(e) => status_label.set_text(&format!("Failed to list: {}", e)),
     }
 }
-pub fn create_list_row(name: &str, icon: Option<&str>, path: &PathBuf) -> ListBoxRow {
+pub fn create_list_row(name: &str, icon: Option<&str>, path: &Path) -> ListBoxRow {
     let row = ListBoxRow::new();
     let hb = GtkBox::new(Orientation::Horizontal, 6);
     let img = match icon {
@@ -53,13 +56,22 @@ pub fn create_list_row(name: &str, icon: Option<&str>, path: &PathBuf) -> ListBo
     row.set_widget_name(&path.to_string_lossy());
     row
 }
-pub fn create_temp_row(listbox: &ListBox, state: &SharedState, name_entry: &gtk4::Entry, icon_entry: &gtk4::Entry) {
+pub fn create_temp_row(
+    listbox: &ListBox,
+    state: &SharedState,
+    name_entry: &gtk4::Entry,
+    icon_entry: &gtk4::Entry,
+) {
     if let Some(old_row) = state.borrow_mut().temp_row.take() {
         listbox.remove(&old_row);
     }
     let name = {
         let n = name_entry.text().to_string();
-        if n.trim().is_empty() { "(New entry)".to_string() } else { n }
+        if n.trim().is_empty() {
+            "(New entry)".to_string()
+        } else {
+            n
+        }
     };
     let icon_txt = icon_entry.text().to_string();
     let img = if icon_txt.trim().is_empty() {
@@ -107,7 +119,9 @@ pub fn on_row_activated(
         Ok(de) => {
             set_form_from_entry(widgets, &de);
             widgets.type_combo.set_sensitive(false);
-            state.borrow_mut().selected_path = Some(path.clone());
+            let mut st = state.borrow_mut();
+            st.selected_path = Some(path.clone());
+            st.is_dirty = false;
             status_label.set_text(&path.to_string_lossy());
         }
         Err(e) => {

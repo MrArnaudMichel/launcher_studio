@@ -1,5 +1,5 @@
 use crate::domain::desktop_entry::DesktopEntry;
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use directories::BaseDirs;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -9,7 +9,7 @@ pub struct DesktopWriter;
 impl DesktopWriter {
     pub fn user_applications_dir() -> Result<PathBuf> {
         if let Some(base) = BaseDirs::new() {
-            let dir = base.home_dir().join(".local/share/applications");
+            let dir = base.data_dir().join("applications");
             Ok(dir)
         } else {
             Err(anyhow!("Failed to resolve XDG base directories"))
@@ -38,13 +38,21 @@ impl DesktopWriter {
             fs::set_permissions(&path, perms)?;
         }
 
+        refresh_desktop_database(&dir);
+
         Ok(path)
     }
 
     pub fn write_to_path(entry: &DesktopEntry, path: &Path) -> Result<PathBuf> {
         entry.validate().map_err(|e| anyhow!(e))?;
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).with_context(|| format!("Creating directory {}", parent.display()))?;
+            fs::create_dir_all(parent)
+                .with_context(|| format!("Creating directory {}", parent.display()))?;
+        }
+        if path.exists() {
+            let backup_path = PathBuf::from(format!("{}.bak", path.display()));
+            fs::copy(path, &backup_path)
+                .with_context(|| format!("Creating backup {}", backup_path.display()))?;
         }
         let content = entry.to_ini_string();
         fs::write(path, content).with_context(|| format!("Writing {}", path.display()))?;
@@ -55,7 +63,19 @@ impl DesktopWriter {
             perms.set_mode(0o644);
             fs::set_permissions(path, perms)?;
         }
+        if let Some(parent) = path.parent() {
+            refresh_desktop_database(parent);
+        }
         Ok(path.to_path_buf())
+    }
+}
+
+fn refresh_desktop_database(applications_dir: &Path) {
+    #[cfg(target_os = "linux")]
+    {
+        let _ = std::process::Command::new("update-desktop-database")
+            .arg(applications_dir)
+            .status();
     }
 }
 
@@ -66,7 +86,24 @@ fn sanitize_file_name(input: &str) -> String {
     s.chars()
         .map(|c| match c {
             'a'..='z' | 'A'..='Z' | '0'..='9' | '-' | '_' | '.' => c,
-            _ => '-'
+            _ => '-',
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sanitize_file_name;
+
+    #[test]
+    fn sanitize_file_name_replaces_unsafe_chars() {
+        let value = sanitize_file_name("my app?/demo");
+        assert_eq!(value, "my-app--demo");
+    }
+
+    #[test]
+    fn sanitize_file_name_uses_fallback_for_blank_input() {
+        let value = sanitize_file_name("   ");
+        assert_eq!(value, "desktop-entry");
+    }
 }

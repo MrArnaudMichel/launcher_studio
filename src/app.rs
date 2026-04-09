@@ -1,6 +1,6 @@
-use adw::prelude::*;
-use adw::Application;
 use crate::ui;
+use adw::Application;
+use adw::prelude::*;
 
 pub fn run() {
     let _ = adw::init();

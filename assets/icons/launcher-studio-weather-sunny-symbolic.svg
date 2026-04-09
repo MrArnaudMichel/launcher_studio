@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
-  <g fill="#241f31">
+  <g fill="#ffffff">
     <!-- Simple symbolic sun: circle with rays -->
     <circle cx="8" cy="8" r="3"/>
-    <path d="M8 0.5v3M8 12.5v3M0.5 8h3M12.5 8h3M2.2 2.2l2.1 2.1M11.7 11.7l2.1 2.1M2.2 13.8l2.1-2.1M11.7 4.3l2.1-2.1" stroke="#241f31" stroke-width="1"/>
+    <path d="M8 0.5v3M8 12.5v3M0.5 8h3M12.5 8h3M2.2 2.2l2.1 2.1M11.7 11.7l2.1 2.1M2.2 13.8l2.1-2.1M11.7 4.3l2.1-2.1" stroke="#ffffff" stroke-width="1"/>
   </g>
 </svg>

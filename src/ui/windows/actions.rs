@@ -1,6 +1,9 @@
-use gtk4::gio::SimpleAction;
-use gtk4::{Application, ApplicationWindow, FileChooserAction, FileChooserDialog, ResponseType};
 use adw::{ApplicationWindow as AdwApplicationWindow, prelude::*};
+use gtk4::gio::SimpleAction;
+use gtk4::{
+    Application, ApplicationWindow, FileChooserAction, FileChooserDialog, FileFilter, ResponseType,
+};
+use std::path::PathBuf;
 
 use crate::domain::desktop_entry::DesktopEntry;
 use crate::services::desktop_reader::DesktopReader;
@@ -18,18 +21,38 @@ pub fn register_actions(
     ensure_temp_row: impl Fn() + Clone + 'static,
     refresh_list: impl Fn() + Clone + 'static,
 ) {
-    register_new_action(app, widgets, state.clone(), status_label, ensure_temp_row);
-    register_open_action(app, widgets, state.clone(), status_label);
-    register_save_action(app, widgets, state.clone(), status_label);
+    register_new_action(
+        app,
+        win,
+        widgets,
+        state.clone(),
+        status_label,
+        ensure_temp_row,
+    );
+    register_open_action(app, win, widgets, state.clone(), status_label);
+    register_save_action(app, win, widgets, state.clone(), status_label);
+    register_save_as_action(app, win, widgets, state.clone(), status_label);
     register_refresh_action(app, refresh_list);
-    register_quit_action(app);
+    register_quit_action(app, win, state.clone());
     register_dir_actions(app, win);
     register_about_actions(app, win);
     register_fullscreen_action(win);
+    register_shortcuts(app);
+}
+
+fn register_shortcuts(app: &Application) {
+    app.set_accels_for_action("app.new", &["<Ctrl>N"]);
+    app.set_accels_for_action("app.open", &["<Ctrl>O"]);
+    app.set_accels_for_action("app.save", &["<Ctrl>S"]);
+    app.set_accels_for_action("app.save_as", &["<Ctrl><Shift>S"]);
+    app.set_accels_for_action("app.refresh", &["F5"]);
+    app.set_accels_for_action("app.quit", &["<Ctrl>Q"]);
+    app.set_accels_for_action("win.toggle_fullscreen", &["F11"]);
 }
 
 fn register_new_action(
     app: &Application,
+    win: &AdwApplicationWindow,
     widgets: &EntryWidgets,
     state: SharedState,
     status_label: &gtk4::Label,
@@ -39,22 +62,22 @@ fn register_new_action(
     let w = widgets.clone();
     let s = state.clone();
     let lbl = status_label.clone();
+    let wwin = win.clone();
     action.connect_activate(move |_, _| {
-        set_form_from_entry(&w, &DesktopEntry::default());
-        {
-            let mut st = s.borrow_mut();
-            st.selected_path = None;
-            st.in_edit = true;
-        }
-        ensure_temp_row();
-        w.type_combo.set_sensitive(true);
-        lbl.set_text("New entry");
+        let w2 = w.clone();
+        let s2 = s.clone();
+        let lbl2 = lbl.clone();
+        let ensure2 = ensure_temp_row.clone();
+        run_after_unsaved_confirmation(&wwin, &s, move || {
+            do_new(&w2, &s2, &lbl2, ensure2.clone());
+        });
     });
     app.add_action(&action);
 }
 
 fn register_open_action(
     app: &Application,
+    win: &AdwApplicationWindow,
     widgets: &EntryWidgets,
     state: SharedState,
     status_label: &gtk4::Label,
@@ -63,41 +86,22 @@ fn register_open_action(
     let w = widgets.clone();
     let s = state.clone();
     let lbl = status_label.clone();
+    let wwin = win.clone();
     action.connect_activate(move |_, _| {
-        let dialog = FileChooserDialog::new(
-            Some("Open .desktop"),
-            None::<&ApplicationWindow>,
-            FileChooserAction::Open,
-            &[("Cancel", ResponseType::Cancel), ("Open", ResponseType::Accept)],
-        );
         let w2 = w.clone();
         let s2 = s.clone();
         let lbl2 = lbl.clone();
-        dialog.connect_response(move |d, resp| {
-            if resp == ResponseType::Accept {
-                if let Some(file) = d.file() {
-                    if let Some(path) = file.path() {
-                        match DesktopReader::read_from_path(&path) {
-                            Ok(de) => {
-                                set_form_from_entry(&w2, &de);
-                                w2.type_combo.set_sensitive(false);
-                                s2.borrow_mut().selected_path = Some(path.clone());
-                                lbl2.set_text(&path.to_string_lossy());
-                            }
-                            Err(e) => lbl2.set_text(&format!("Open failed: {}", e)),
-                        }
-                    }
-                }
-            }
-            d.close();
+        let open_win = wwin.clone();
+        run_after_unsaved_confirmation(&wwin, &s, move || {
+            do_open(&w2, &s2, &lbl2, &open_win);
         });
-        dialog.show();
     });
     app.add_action(&action);
 }
 
 fn register_save_action(
     app: &Application,
+    win: &AdwApplicationWindow,
     widgets: &EntryWidgets,
     state: SharedState,
     status_label: &gtk4::Label,
@@ -106,25 +110,40 @@ fn register_save_action(
     let w = widgets.clone();
     let s = state.clone();
     let lbl = status_label.clone();
-    action.connect_activate(move |_, _| {
-        match collect_entry(&w) {
-            Ok(de) => {
-                let sel_path = s.borrow().selected_path.clone();
-                if let Some(path) = sel_path {
-                    match DesktopWriter::write_to_path(&de, &path) {
-                        Ok(_) => lbl.set_text(&format!("Updated: {}", path.display())),
-                        Err(e) => lbl.set_text(&format!("Save failed: {}", e)),
-                    }
-                } else {
-                    let fname = if !de.name.trim().is_empty() { de.name.clone() } else { "desktop-entry".into() };
-                    match DesktopWriter::write(&de, &fname, true) {
-                        Ok(path) => lbl.set_text(&format!("Saved: {}", path.display())),
-                        Err(e) => lbl.set_text(&format!("Save failed: {}", e)),
-                    }
-                }
+    let wwin = win.clone();
+    action.connect_activate(move |_, _| match save_entry(&w, &s) {
+        Ok((path, updated)) => {
+            if updated {
+                lbl.set_text(&format!("Updated: {}", path.display()));
+            } else {
+                lbl.set_text(&format!("Saved: {}", path.display()));
             }
-            Err(e) => lbl.set_text(&format!("Invalid: {}", e)),
         }
+        Err(e) => {
+            lbl.set_text(&format!("Save failed: {}", e));
+            dialogs::show_error(&wwin, &e);
+        }
+    });
+    app.add_action(&action);
+}
+
+fn register_save_as_action(
+    app: &Application,
+    win: &AdwApplicationWindow,
+    widgets: &EntryWidgets,
+    state: SharedState,
+    status_label: &gtk4::Label,
+) {
+    let action = SimpleAction::new("save_as", None);
+    let w = widgets.clone();
+    let s = state.clone();
+    let lbl = status_label.clone();
+    let wwin = win.clone();
+    action.connect_activate(move |_, _| {
+        do_save_as(&w, &s, &wwin, {
+            let lbl2 = lbl.clone();
+            move |path| lbl2.set_text(&format!("Saved: {}", path.display()))
+        });
     });
     app.add_action(&action);
 }
@@ -135,10 +154,17 @@ fn register_refresh_action(app: &Application, refresh_list: impl Fn() + 'static)
     app.add_action(&action);
 }
 
-fn register_quit_action(app: &Application) {
+fn register_quit_action(app: &Application, win: &AdwApplicationWindow, state: SharedState) {
     let action = SimpleAction::new("quit", None);
     let a = app.clone();
-    action.connect_activate(move |_, _| a.quit());
+    let w = win.clone();
+    let s = state.clone();
+    action.connect_activate(move |_, _| {
+        run_after_unsaved_confirmation(&w, &s, {
+            let a2 = a.clone();
+            move || a2.quit()
+        });
+    });
     app.add_action(&action);
 }
 
@@ -190,32 +216,178 @@ fn register_fullscreen_action(win: &AdwApplicationWindow) {
     let action = SimpleAction::new("toggle_fullscreen", None);
     let w = win.clone();
     action.connect_activate(move |_, _| {
-        if w.is_fullscreen() { w.unfullscreen(); } else { w.fullscreen(); }
+        if w.is_fullscreen() {
+            w.unfullscreen();
+        } else {
+            w.fullscreen();
+        }
     });
     win.add_action(&action);
 }
 
-pub fn do_save(
+fn run_after_unsaved_confirmation(
+    win: &impl IsA<gtk4::Window>,
+    state: &SharedState,
+    action: impl Fn() + 'static,
+) {
+    if state.borrow().is_dirty {
+        dialogs::confirm_discard_changes(win, action);
+    } else {
+        action();
+    }
+}
+
+pub fn do_new(
+    widgets: &EntryWidgets,
+    state: &SharedState,
+    status_label: &gtk4::Label,
+    ensure_temp_row: impl Fn(),
+) {
+    set_form_from_entry(widgets, &DesktopEntry::default());
+    {
+        let mut st = state.borrow_mut();
+        st.selected_path = None;
+        st.in_edit = true;
+        st.is_dirty = false;
+    }
+    ensure_temp_row();
+    widgets.type_combo.set_sensitive(true);
+    status_label.set_text("New entry");
+}
+
+pub fn do_open(
+    widgets: &EntryWidgets,
+    state: &SharedState,
+    status_label: &gtk4::Label,
+    _win: &impl IsA<gtk4::Window>,
+) {
+    let dialog = FileChooserDialog::new(
+        Some("Open .desktop"),
+        None::<&ApplicationWindow>,
+        FileChooserAction::Open,
+        &[
+            ("Cancel", ResponseType::Cancel),
+            ("Open", ResponseType::Accept),
+        ],
+    );
+
+    if let Some(path) = DesktopReader::user_applications_dir() {
+        let _ = dialog.set_current_folder(Some(&gtk4::gio::File::for_path(path)));
+    }
+
+    let filter = FileFilter::new();
+    filter.set_name(Some("Desktop files"));
+    filter.add_pattern("*.desktop");
+    dialog.add_filter(&filter);
+
+    let w = widgets.clone();
+    let s = state.clone();
+    let lbl = status_label.clone();
+    dialog.connect_response(move |d, resp| {
+        if resp == ResponseType::Accept
+            && let Some(file) = d.file()
+            && let Some(path) = file.path()
+        {
+            match DesktopReader::read_from_path(&path) {
+                Ok(de) => {
+                    set_form_from_entry(&w, &de);
+                    w.type_combo.set_sensitive(false);
+                    let mut st = s.borrow_mut();
+                    st.selected_path = Some(path.clone());
+                    st.in_edit = false;
+                    st.is_dirty = false;
+                    lbl.set_text(&path.to_string_lossy());
+                }
+                Err(e) => lbl.set_text(&format!("Open failed: {}", e)),
+            }
+        }
+        d.close();
+    });
+    dialog.show();
+}
+
+fn save_entry(widgets: &EntryWidgets, state: &SharedState) -> Result<(PathBuf, bool), String> {
+    let de = collect_entry(widgets)?;
+    let sel_path = state.borrow().selected_path.clone();
+    let result = if let Some(path) = sel_path {
+        DesktopWriter::write_to_path(&de, &path)
+            .map(|p| (p, true))
+            .map_err(|e| e.to_string())
+    } else {
+        let fname = if !de.name.trim().is_empty() {
+            de.name.clone()
+        } else {
+            "desktop-entry".into()
+        };
+        DesktopWriter::write(&de, &fname, true)
+            .map(|p| (p, false))
+            .map_err(|e| e.to_string())
+    }?;
+
+    state.borrow_mut().is_dirty = false;
+    Ok(result)
+}
+
+pub fn do_save_as(
     widgets: &EntryWidgets,
     state: &SharedState,
     win: &impl IsA<gtk4::Window>,
+    on_success: impl Fn(PathBuf) + 'static,
 ) {
-    match collect_entry(widgets) {
-        Ok(de) => {
-            let sel_path = state.borrow().selected_path.clone();
-            if let Some(path) = sel_path {
-                match DesktopWriter::write_to_path(&de, &path) {
-                    Ok(_) => dialogs::show_save_success(win, path, true),
-                    Err(e) => dialogs::show_error(win, &e.to_string()),
+    let de = match collect_entry(widgets) {
+        Ok(de) => de,
+        Err(e) => {
+            dialogs::show_error(win, &e);
+            return;
+        }
+    };
+
+    let dialog = FileChooserDialog::new(
+        Some("Save .desktop as"),
+        None::<&ApplicationWindow>,
+        FileChooserAction::Save,
+        &[
+            ("Cancel", ResponseType::Cancel),
+            ("Save", ResponseType::Accept),
+        ],
+    );
+
+    if let Some(path) = DesktopReader::user_applications_dir() {
+        let _ = dialog.set_current_folder(Some(&gtk4::gio::File::for_path(path)));
+    }
+
+    let filter = FileFilter::new();
+    filter.set_name(Some("Desktop files"));
+    filter.add_pattern("*.desktop");
+    dialog.add_filter(&filter);
+
+    let s = state.clone();
+    dialog.connect_response(move |d, resp| {
+        if resp == ResponseType::Accept
+            && let Some(file) = d.file()
+            && let Some(mut path) = file.path()
+        {
+            if path.extension().and_then(|ext| ext.to_str()) != Some("desktop") {
+                path.set_extension("desktop");
+            }
+            match DesktopWriter::write_to_path(&de, &path) {
+                Ok(saved_path) => {
+                    let mut st = s.borrow_mut();
+                    st.selected_path = Some(saved_path.clone());
+                    st.is_dirty = false;
+                    on_success(saved_path);
                 }
-            } else {
-                let fname = if !de.name.trim().is_empty() { de.name.clone() } else { "desktop-entry".into() };
-                match DesktopWriter::write(&de, &fname, true) {
-                    Ok(path) => dialogs::show_save_success(win, path, false),
-                    Err(e) => dialogs::show_error(win, &e.to_string()),
-                }
+                Err(e) => dialogs::show_error(d, &e.to_string()),
             }
         }
+        d.close();
+    });
+    dialog.show();
+}
+
+pub fn do_save(widgets: &EntryWidgets, state: &SharedState, win: &impl IsA<gtk4::Window>) {
+    match save_entry(widgets, state) {
+        Ok((path, updated)) => dialogs::show_save_success(win, path, updated),
         Err(e) => dialogs::show_error(win, &e),
     }
 }
@@ -247,7 +419,11 @@ pub fn do_delete(
             } else {
                 set_form_from_entry(&w, &DesktopEntry::default());
                 w.type_combo.set_sensitive(true);
-                s.borrow_mut().selected_path = None;
+                {
+                    let mut st = s.borrow_mut();
+                    st.selected_path = None;
+                    st.is_dirty = false;
+                }
                 refresh_list();
                 lbl.set_text("Deleted");
             }

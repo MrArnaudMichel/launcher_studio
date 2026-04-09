@@ -1,15 +1,27 @@
-use gtk4::{Image, ToggleButton};
+use adw::{ColorScheme, StyleManager};
 use gtk4::prelude::*;
-use adw::{StyleManager, ColorScheme};
+use gtk4::{Image, ToggleButton};
 use std::cell::RefCell;
 use std::rc::Rc;
 
 const NIGHT_NAME: &str = "launcher-studio-weather-night-symbolic";
 const SUNNY_NAME: &str = "launcher-studio-weather-sunny-symbolic";
-const NIGHT_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-night-symbolic.svg");
-const SUNNY_FILE: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-sunny-symbolic.svg");
-const NIGHT_EMBED: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-night-symbolic.svg"));
-const SUNNY_EMBED: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/icons/launcher-studio-weather-sunny-symbolic.svg"));
+const NIGHT_FILE: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/icons/launcher-studio-weather-night-symbolic.svg"
+);
+const SUNNY_FILE: &str = concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/icons/launcher-studio-weather-sunny-symbolic.svg"
+);
+const NIGHT_EMBED: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/icons/launcher-studio-weather-night-symbolic.svg"
+));
+const SUNNY_EMBED: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/assets/icons/launcher-studio-weather-sunny-symbolic.svg"
+));
 
 fn write_embedded_icon(name: &str, bytes: &[u8]) -> Option<std::path::PathBuf> {
     let dir = std::env::var_os("XDG_RUNTIME_DIR")
@@ -75,7 +87,11 @@ pub fn create_theme_button() -> ToggleButton {
     btn.connect_toggled(move |b| {
         let active = b.is_active();
         let sm = StyleManager::default();
-        sm.set_color_scheme(if active { ColorScheme::ForceDark } else { ColorScheme::ForceLight });
+        sm.set_color_scheme(if active {
+            ColorScheme::ForceDark
+        } else {
+            ColorScheme::ForceLight
+        });
         set_theme_icon(&icon_c, active, *file_mode_c.borrow());
     });
 

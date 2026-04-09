@@ -1,5 +1,5 @@
-use gtk4::{ResponseType, Window};
 use adw::{AboutDialog, prelude::*};
+use gtk4::{ResponseType, Window};
 
 pub fn show_error<W: IsA<Window>>(parent: &W, msg: &str) {
     let dialog = gtk4::MessageDialog::builder()
@@ -31,16 +31,11 @@ pub fn show_credits<W: IsA<gtk4::Widget>>(parent: &W) {
     about.set_application_name("Launcher Studio");
     about.set_application_icon("fr.arnaudmichel.launcherstudio");
 
-    about.set_developers(&[
-        "Arnaud Michel https://github.com/MrArnaudMichel",
-    ]);
+    about.set_developers(&["Arnaud Michel https://github.com/MrArnaudMichel"]);
 
     about.add_credit_section(
         Some("Special Thanks"),
-        &[
-            "The GTK/GNOME community",
-            "Project contributors",
-        ],
+        &["The GTK/GNOME community", "Project contributors"],
     );
 
     about.add_credit_section(
@@ -64,10 +59,32 @@ where
         .modal(true)
         .title("Confirm deletion")
         .text("Delete selected .desktop file?")
-        .secondary_text(&format!("This will permanently remove:\n{}", path.display()))
+        .secondary_text(format!("This will permanently remove:\n{}", path.display()))
         .build();
     dialog.add_button("Cancel", ResponseType::Cancel);
     dialog.add_button("Delete", ResponseType::Accept);
+    dialog.connect_response(move |d, resp| {
+        if resp == ResponseType::Accept {
+            on_confirm();
+        }
+        d.close();
+    });
+    dialog.show();
+}
+
+pub fn confirm_discard_changes<W: IsA<Window>, F>(parent: &W, on_confirm: F)
+where
+    F: Fn() + 'static,
+{
+    let dialog = gtk4::MessageDialog::builder()
+        .transient_for(parent)
+        .modal(true)
+        .title("Unsaved changes")
+        .text("Discard current changes?")
+        .secondary_text("Your current edits will be lost.")
+        .build();
+    dialog.add_button("Cancel", ResponseType::Cancel);
+    dialog.add_button("Discard", ResponseType::Accept);
     dialog.connect_response(move |d, resp| {
         if resp == ResponseType::Accept {
             on_confirm();
@@ -88,7 +105,11 @@ pub fn show_save_success<W: IsA<Window>>(parent: &W, path: std::path::PathBuf, i
         .modal(true)
         .title(title)
         .text(text)
-        .secondary_text(&format!("{} {}", if is_update { "Updated" } else { "Saved to" }, path.display()))
+        .secondary_text(format!(
+            "{} {}",
+            if is_update { "Updated" } else { "Saved to" },
+            path.display()
+        ))
         .build();
     dialog.add_button("Open Folder", ResponseType::Accept);
     dialog.add_button("Close", ResponseType::Close);

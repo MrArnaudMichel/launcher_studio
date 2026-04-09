@@ -1,5 +1,5 @@
-use gtk4::{ScrolledWindow, ListBox};
 use gtk4::prelude::*;
+use gtk4::{ListBox, ScrolledWindow};
 
 pub struct Sidebar {
     pub container: ScrolledWindow,

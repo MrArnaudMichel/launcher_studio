@@ -1,5 +1,5 @@
-use gtk4::{Box as GtkBox, Button, Image, Orientation};
 use gtk4::prelude::*;
+use gtk4::{Box as GtkBox, Button, Image, Orientation};
 
 pub struct Toolbar {
     pub container: GtkBox,
@@ -41,5 +41,11 @@ pub fn build_toolbar() -> Toolbar {
     container.append(&btn_save);
     container.append(&btn_refresh);
 
-    Toolbar { container, btn_new, btn_open, btn_save, btn_refresh }
+    Toolbar {
+        container,
+        btn_new,
+        btn_open,
+        btn_save,
+        btn_refresh,
+    }
 }

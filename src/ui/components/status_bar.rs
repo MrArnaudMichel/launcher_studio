@@ -1,5 +1,5 @@
-use gtk4::{Box as GtkBox, Label, Orientation};
 use gtk4::prelude::*;
+use gtk4::{Box as GtkBox, Label, Orientation};
 
 pub struct StatusBar {
     pub container: GtkBox,

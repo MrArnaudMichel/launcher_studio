@@ -1,29 +1,36 @@
 use gtk4 as gtk;
 
 pub struct IconService {
-    icon_theme: gtk::IconTheme,
+    _icon_theme: gtk::IconTheme,
+    icon_names: Vec<String>,
 }
 
 impl IconService {
     pub fn new() -> Self {
         let display = gtk::gdk::Display::default().expect("No display");
         let icon_theme = gtk::IconTheme::for_display(&display);
-        Self { icon_theme }
-    }
-
-    pub fn list_icons(&self) -> Vec<String> {
-        let mut names: Vec<String> = self.icon_theme.icon_names()
+        let mut icon_names: Vec<String> = icon_theme
+            .icon_names()
             .into_iter()
             .map(|s| s.to_string())
             .collect();
-        names.sort();
-        names
+        icon_names.sort();
+        Self {
+            _icon_theme: icon_theme,
+            icon_names,
+        }
+    }
+
+    pub fn list_icons(&self) -> Vec<String> {
+        self.icon_names.clone()
     }
 
     pub fn search_icons(&self, query: &str) -> Vec<String> {
         let query = query.to_lowercase();
-        self.list_icons().into_iter()
+        self.icon_names
+            .iter()
             .filter(|name| name.to_lowercase().contains(&query))
+            .cloned()
             .collect()
     }
 }

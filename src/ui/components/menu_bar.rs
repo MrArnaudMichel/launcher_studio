@@ -1,6 +1,6 @@
-use gtk4::{PopoverMenuBar};
-use gtk4::gio::Menu;
 use gtk4::Application;
+use gtk4::PopoverMenuBar;
+use gtk4::gio::Menu;
 
 // Builds the application menu bar with File/View/Tools/Help/Credits.
 // It wires no actions itself; it only defines the action names expected by the main window.
@@ -12,6 +12,7 @@ pub fn build_menu_bar(_app: &Application) -> PopoverMenuBar {
     file_menu.append(Some("New"), Some("app.new"));
     file_menu.append(Some("Open"), Some("app.open"));
     file_menu.append(Some("Save"), Some("app.save"));
+    file_menu.append(Some("Save As"), Some("app.save_as"));
     file_menu.append(Some("Refresh"), Some("app.refresh"));
     file_menu.append(Some("Quit"), Some("app.quit"));
     menu_model.append_submenu(Some("File"), &file_menu);
@@ -23,7 +24,10 @@ pub fn build_menu_bar(_app: &Application) -> PopoverMenuBar {
 
     // Tools menu
     let tools_menu = Menu::new();
-    tools_menu.append(Some("Open System Applications"), Some("app.open_system_dir"));
+    tools_menu.append(
+        Some("Open System Applications"),
+        Some("app.open_system_dir"),
+    );
     tools_menu.append(Some("Open User Applications"), Some("app.open_user_dir"));
     menu_model.append_submenu(Some("Tools"), &tools_menu);
 
