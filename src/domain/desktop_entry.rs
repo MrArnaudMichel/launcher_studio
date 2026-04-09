@@ -113,8 +113,13 @@ impl DesktopEntry {
                 if self.startup_notify { "true" } else { "false" }
             );
         }
-        if self.type_field == "Application" && !self.categories.is_empty() {
-            let _ = writeln!(&mut s, "Categories={};", self.categories.join(";"));
+        if self.type_field == "Application" {
+            let categories = if self.categories.is_empty() {
+                vec!["Utility".to_string()]
+            } else {
+                self.categories.clone()
+            };
+            let _ = writeln!(&mut s, "Categories={};", categories.join(";"));
         }
         if self.type_field == "Application" && !self.mime_type.is_empty() {
             let _ = writeln!(&mut s, "MimeType={};", self.mime_type.join(";"));

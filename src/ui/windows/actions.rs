@@ -1,8 +1,6 @@
 use adw::{ApplicationWindow as AdwApplicationWindow, prelude::*};
 use gtk4::gio::SimpleAction;
-use gtk4::{
-    Application, ApplicationWindow, FileChooserAction, FileChooserDialog, FileFilter, ResponseType,
-};
+use gtk4::{Application, FileChooserAction, FileChooserDialog, FileFilter, ResponseType};
 use std::path::PathBuf;
 
 use crate::domain::desktop_entry::DesktopEntry;
@@ -259,11 +257,11 @@ pub fn do_open(
     widgets: &EntryWidgets,
     state: &SharedState,
     status_label: &gtk4::Label,
-    _win: &impl IsA<gtk4::Window>,
+    win: &impl IsA<gtk4::Window>,
 ) {
     let dialog = FileChooserDialog::new(
         Some("Open .desktop"),
-        None::<&ApplicationWindow>,
+        Some(win.upcast_ref::<gtk4::Window>()),
         FileChooserAction::Open,
         &[
             ("Cancel", ResponseType::Cancel),
@@ -344,7 +342,7 @@ pub fn do_save_as(
 
     let dialog = FileChooserDialog::new(
         Some("Save .desktop as"),
-        None::<&ApplicationWindow>,
+        Some(win.upcast_ref::<gtk4::Window>()),
         FileChooserAction::Save,
         &[
             ("Cancel", ResponseType::Cancel),

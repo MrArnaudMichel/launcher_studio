@@ -319,9 +319,10 @@ fn build_icon_row(icon_entry: &Entry) -> GtkBox {
     row
 }
 fn show_file_chooser(entry: &Entry, title: &str, action: FileChooserAction, prefix_file: bool) {
+    let parent_window = entry.root().and_downcast::<gtk4::Window>();
     let dialog = FileChooserDialog::new(
         Some(title),
-        None::<&gtk4::ApplicationWindow>,
+        parent_window.as_ref(),
         action,
         &[
             ("Cancel", gtk4::ResponseType::Cancel),

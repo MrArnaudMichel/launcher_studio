@@ -96,6 +96,7 @@ impl IconPickerDialog {
                         .map(|name| name.to_string())
                 });
             *selected_icon.borrow_mut() = selected;
+            update_selected_button_styles(flow);
         });
     }
 
@@ -115,7 +116,6 @@ impl IconPickerDialog {
 
         let icon_list = self.icon_list.clone();
         let all_icons = Rc::new(self.icon_service.list_icons());
-        let all_icons_for_response = all_icons.clone();
         let selected_for_search = selected_icon.clone();
         self.search_entry.connect_search_changed(move |entry| {
             let query = entry.text().to_string();
@@ -128,10 +128,7 @@ impl IconPickerDialog {
         dialog.connect_response(move |d, resp| {
             if let Some(cb) = callback_cell.borrow_mut().take() {
                 if resp == gtk::ResponseType::Accept {
-                    cb(normalize_icon_name_for_desktop(
-                        selected_icon.borrow().clone(),
-                        &all_icons_for_response,
-                    ));
+                    cb(selected_icon.borrow().clone());
                 } else {
                     cb(None);
                 }
@@ -157,9 +154,6 @@ fn pick_icons_for_display(candidates: &[String]) -> Vec<String> {
     let mut symbolic = Vec::new();
 
     for name in candidates {
-        if name.starts_with("adw-") {
-            continue;
-        }
         if name.ends_with("-symbolic") {
             symbolic.push(name.clone());
         } else {
@@ -172,28 +166,18 @@ fn pick_icons_for_display(candidates: &[String]) -> Vec<String> {
     regular
 }
 
-fn normalize_icon_name_for_desktop(
-    selected: Option<String>,
-    all_icons: &[String],
-) -> Option<String> {
-    let name = selected?;
-    if let Some(base) = name.strip_suffix("-symbolic")
-        && all_icons.iter().any(|n| n == base)
-    {
-        return Some(base.to_string());
-    }
-    if name.starts_with("adw-") {
-        return None;
-    }
-    Some(name)
-}
-
 fn populate_icon_list(
     icon_list: &gtk::FlowBox,
     selected_icon: &Rc<std::cell::RefCell<Option<String>>>,
     icons: Vec<String>,
 ) {
-    while let Some(child) = icon_list.first_child() {
+    let mut children = Vec::new();
+    let mut child = icon_list.first_child();
+    while let Some(current) = child {
+        child = current.next_sibling();
+        children.push(current);
+    }
+    for child in children {
         icon_list.remove(&child);
     }
 
@@ -209,5 +193,26 @@ fn populate_icon_list(
             });
         }
         icon_list.insert(&btn, -1);
+    }
+
+    update_selected_button_styles(icon_list);
+}
+
+fn update_selected_button_styles(flow: &gtk::FlowBox) {
+    for child in flow.selected_children() {
+        if let Some(btn) = child.child().and_downcast::<gtk::Button>() {
+            btn.add_css_class("suggested-action");
+        }
+    }
+
+    let mut current = flow.first_child();
+    while let Some(widget) = current {
+        current = widget.next_sibling();
+        if let Some(child) = widget.downcast_ref::<gtk::FlowBoxChild>()
+            && !child.is_selected()
+            && let Some(btn) = child.child().and_downcast::<gtk::Button>()
+        {
+            btn.remove_css_class("suggested-action");
+        }
     }
 }
