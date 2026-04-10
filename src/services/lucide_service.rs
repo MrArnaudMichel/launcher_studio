@@ -87,6 +87,21 @@ impl LucideService {
         Ok(names)
     }
 
+    pub fn is_online(&self) -> bool {
+        let Ok(url) = reqwest::Url::parse_with_params(
+            ICONIFY_SEARCH_URL,
+            &[("query", "home"), ("prefix", "lucide"), ("limit", "1")],
+        ) else {
+            return false;
+        };
+
+        self.http
+            .get(url)
+            .send()
+            .and_then(|resp| resp.error_for_status())
+            .is_ok()
+    }
+
     pub fn preview_icon_svg(
         &self,
         icon_name: &str,
@@ -146,6 +161,9 @@ impl LucideService {
             .text()
             .context("Invalid SVG payload")?;
 
+        let body = apply_render_settings(&body, &normalized);
+
+
         fs::write(&target_path, body)
             .with_context(|| format!("Cannot save {}", target_path.display()))?;
 
@@ -200,6 +218,90 @@ fn settings_suffix(settings: &LucideRenderSettings) -> String {
     format!("c{}-sw{}-s{}", color, stroke, settings.size)
 }
 
+fn apply_render_settings(svg: &str, settings: &LucideRenderSettings) -> String {
+    rewrite_stroke_width(svg, settings.stroke_width)
+}
+
+fn rewrite_stroke_width(svg: &str, stroke_width: f64) -> String {
+    let stroke_width = format_number(stroke_width);
+    let mut output = String::with_capacity(svg.len());
+    let mut remainder = svg;
+
+    while let Some(index) = remainder.find("stroke-width") {
+        output.push_str(&remainder[..index]);
+        let candidate = &remainder[index..];
+
+        if !candidate.starts_with("stroke-width") {
+            output.push_str(candidate);
+            remainder = "";
+            break;
+        }
+
+        let mut cursor = "stroke-width".len();
+        let bytes = candidate.as_bytes();
+
+        while cursor < candidate.len() && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+
+        if cursor >= candidate.len() || bytes[cursor] != b'=' {
+            output.push_str("stroke-width");
+            remainder = &candidate["stroke-width".len()..];
+            continue;
+        }
+
+        cursor += 1;
+        while cursor < candidate.len() && bytes[cursor].is_ascii_whitespace() {
+            cursor += 1;
+        }
+
+        if cursor >= candidate.len() {
+            output.push_str(candidate);
+            remainder = "";
+            break;
+        }
+
+        let quote = bytes[cursor] as char;
+        if quote != '"' && quote != '\'' {
+            output.push_str("stroke-width=");
+            remainder = &candidate["stroke-width".len()..];
+            continue;
+        }
+
+        cursor += 1;
+        let value_start = cursor;
+        while cursor < candidate.len() && candidate.as_bytes()[cursor] as char != quote {
+            cursor += 1;
+        }
+
+        if cursor >= candidate.len() {
+            output.push_str(candidate);
+            remainder = "";
+            break;
+        }
+
+        output.push_str("stroke-width=");
+        output.push(quote);
+        output.push_str(&stroke_width);
+        output.push(quote);
+
+        // Preserve any surrounding formatting that may exist inside the SVG.
+        let _ = value_start;
+        remainder = &candidate[cursor + 1..];
+    }
+
+    output.push_str(remainder);
+    output
+}
+
+fn format_number(value: f64) -> String {
+    let mut formatted = format!("{:.1}", (value * 10.0).round() / 10.0);
+    if formatted.ends_with(".0") {
+        formatted.truncate(formatted.len() - 2);
+    }
+    formatted
+}
+
 fn default_lucide_icons() -> Vec<String> {
     [
         "app-window",
@@ -237,8 +339,8 @@ fn default_lucide_icons() -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::{
-        LucideRenderSettings, normalize_hex_color, normalize_settings, sanitize_icon_name,
-        settings_suffix,
+        LucideRenderSettings, normalize_hex_color, normalize_settings, rewrite_stroke_width,
+        sanitize_icon_name, settings_suffix,
     };
 
     #[test]
@@ -277,5 +379,12 @@ mod tests {
             size: 24,
         };
         assert_eq!(settings_suffix(&settings), "c336699-sw1_5-s24");
+    }
+
+    #[test]
+    fn rewrite_stroke_width_updates_svg_attributes() {
+        let svg = r#"<svg><path stroke-width="2" d="M0 0h24v24H0z"/></svg>"#;
+        let rewritten = rewrite_stroke_width(svg, 1.5);
+        assert!(rewritten.contains(r#"stroke-width="1.5""#));
     }
 }

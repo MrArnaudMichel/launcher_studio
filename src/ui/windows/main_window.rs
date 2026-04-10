@@ -101,19 +101,7 @@ pub fn show_main_window(app: &impl IsA<Application>) {
     win.present();
 }
 fn setup_css() {
-    let provider = gtk4::CssProvider::new();
-    provider.load_from_data(
-        "scrolledwindow.frame { border-radius: 8px; }\n\
-         textview { border-radius: 6px; }\n\
-         entry { border-radius: 6px; }\n",
-    );
-    if let Some(display) = gtk4::gdk::Display::default() {
-        gtk4::style_context_add_provider_for_display(
-            &display,
-            &provider,
-            gtk4::STYLE_PROVIDER_PRIORITY_APPLICATION,
-        );
-    }
+    // Intentionally left empty: use GNOME default design system (Adwaita).
 }
 struct ActionButtons {
     container: GtkBox,

@@ -1,11 +1,2 @@
-scrolledwindow.frame {
-    border-radius: 8px;
-}
+/* Custom styles intentionally removed: app now relies on GNOME/libadwaita defaults. */
 
-textview {
-    border-radius: 6px;
-}
-
-entry {
-    border-radius: 6px;
-}
