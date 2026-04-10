@@ -540,11 +540,22 @@ fn refresh_icon_preview(e: &Entry) {
     if txt.trim().is_empty() {
         e.set_icon_from_icon_name(EntryIconPosition::Primary, Some("image-missing"));
     } else if txt.contains('/') {
-        match gdk::Texture::from_file(&File::for_path(&txt)) {
-            Ok(tex) => e.set_icon_from_paintable(EntryIconPosition::Primary, Some(&tex)),
-            Err(_) => e.set_icon_from_icon_name(EntryIconPosition::Primary, Some("image-missing")),
+        // Try to load as image file (SVG, PNG, etc.)
+        let path = &txt;
+        if path.ends_with(".svg") || path.ends_with(".png") || path.ends_with(".jpg")
+            || path.ends_with(".jpeg") || path.ends_with(".gif") {
+            match gdk::Texture::from_file(&File::for_path(path)) {
+                Ok(tex) => {
+                    e.set_icon_from_paintable(EntryIconPosition::Primary, Some(&tex));
+                    return;
+                }
+                Err(_) => {}
+            }
         }
+        // Fall back to icon theme if file loading fails
+        e.set_icon_from_icon_name(EntryIconPosition::Primary, Some("image-missing"));
     } else {
+        // Try as icon name from theme
         e.set_icon_from_icon_name(EntryIconPosition::Primary, Some(&txt));
     }
 }

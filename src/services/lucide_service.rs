@@ -124,7 +124,7 @@ impl LucideService {
             return Ok(target_path);
         }
 
-        let color_value = normalized.color_hex.trim_start_matches('#').to_string();
+        let color_value = normalized.color_hex.clone(); // Keep the # for API
         let url = reqwest::Url::parse_with_params(
             &format!("{}/{}.svg", ICONIFY_ICON_URL, sanitized),
             &[
