@@ -10,6 +10,9 @@ use std::rc::Rc;
 const DEFAULT_RENDER_SIZE: u32 = 128;
 const PREVIEW_PIXEL_SIZE: i32 = 144;
 const GRID_PIXEL_SIZE: i32 = 64;
+const GRID_ITEM_SIZE: i32 = 124;
+const GRID_COLUMN_SPACING: u32 = 14;
+const GRID_ROW_SPACING: u32 = 14;
 const SEARCH_LIMIT: usize = 72;
 const DEFAULT_COLOR: &str = "#ffffff";
 const DEFAULT_STROKE_WIDTH: f64 = 2.0;
@@ -20,6 +23,8 @@ const SECTION_SPACING: i32 = 12;
 
 pub struct IconPickerDialog {
     window: AdwWindow,
+    network_state_button: gtk::Button,
+    network_icon: gtk::Image,
     network_label: gtk::Label,
     retry_button: gtk::Button,
     search_entry: gtk::SearchEntry,
@@ -60,6 +65,27 @@ impl IconPickerDialog {
         let header_title = AdwWindowTitle::new("Lucide Icon Picker", "GNOME style integration");
         header.set_title_widget(Some(&header_title));
 
+        let network_box = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        network_box.set_valign(gtk::Align::Center);
+        let network_icon = gtk::Image::from_icon_name("network-wireless-signal-excellent-symbolic");
+        network_icon.set_pixel_size(16);
+        let network_label = gtk::Label::new(Some("Checking..."));
+        network_label.set_xalign(0.5);
+        let network_state_button = gtk::Button::new();
+        network_state_button.add_css_class("suggested-action");
+        network_state_button.add_css_class("pill");
+        network_state_button.set_sensitive(false);
+        network_state_button.set_child(Some(&network_box));
+
+        let retry_button = gtk::Button::with_label("Retry");
+        retry_button.add_css_class("flat");
+        retry_button.set_tooltip_text(Some("Retry internet connection"));
+        retry_button.set_visible(false);
+        network_box.append(&network_icon);
+        network_box.append(&network_label);
+        header.pack_start(&network_state_button);
+        header.pack_start(&retry_button);
+
         let cancel_button = gtk::Button::with_label("Cancel");
         let use_button = gtk::Button::with_label("Use this icon");
         use_button.add_css_class("suggested-action");
@@ -81,17 +107,6 @@ impl IconPickerDialog {
         title_label.set_xalign(0.0);
         title_label.add_css_class("title-4");
         main_box.append(&title_label);
-
-        let network_row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
-        let network_label = gtk::Label::new(Some("Checking internet connection..."));
-        network_label.set_xalign(0.0);
-        network_label.set_hexpand(true);
-        network_label.add_css_class("dim-label");
-        let retry_button = gtk::Button::with_label("Retry");
-        retry_button.add_css_class("flat");
-        network_row.append(&network_label);
-        network_row.append(&retry_button);
-        main_box.append(&network_row);
 
         let search_entry = gtk::SearchEntry::new();
         search_entry.set_placeholder_text(Some(
@@ -117,10 +132,10 @@ impl IconPickerDialog {
         icon_grid.set_activate_on_single_click(true);
         icon_grid.set_min_children_per_line(4);
         icon_grid.set_max_children_per_line(6);
-        icon_grid.set_column_spacing(10);
-        icon_grid.set_row_spacing(10);
+        icon_grid.set_column_spacing(GRID_COLUMN_SPACING);
+        icon_grid.set_row_spacing(GRID_ROW_SPACING);
         icon_grid.set_homogeneous(true);
-        icon_grid.set_valign(gtk::Align::Start);
+        icon_grid.set_valign(gtk::Align::Fill);
 
         let grid_scroll = gtk::ScrolledWindow::builder()
             .hexpand(true)
@@ -254,6 +269,8 @@ impl IconPickerDialog {
 
         let this = Self {
             window,
+            network_state_button,
+            network_icon,
             network_label,
             retry_button,
             search_entry,
@@ -517,6 +534,8 @@ impl IconPickerDialog {
     fn clone_handles(&self) -> Self {
         Self {
             window: self.window.clone(),
+            network_state_button: self.network_state_button.clone(),
+            network_icon: self.network_icon.clone(),
             network_label: self.network_label.clone(),
             retry_button: self.retry_button.clone(),
             search_entry: self.search_entry.clone(),
@@ -539,15 +558,23 @@ impl IconPickerDialog {
 
     fn apply_online_state(&self, online: bool) {
         if online {
-            self.network_label
-                .set_text("Online mode: Lucide search and download available");
+            self.network_icon
+                .set_icon_name(Some("network-wireless-signal-excellent-symbolic"));
+            self.network_label.set_text("Online");
+            self.network_state_button.set_tooltip_text(Some(
+                "Lucide is available: internet connection is active",
+            ));
+            self.retry_button.set_visible(false);
             self.search_entry.set_sensitive(true);
             self.icon_grid.set_sensitive(true);
             self.color_entry.set_sensitive(true);
             self.stroke_spin.set_sensitive(true);
         } else {
-            self.network_label
-                .set_text("Offline mode: Lucide requires internet connection");
+            self.network_icon.set_icon_name(Some("network-offline-symbolic"));
+            self.network_label.set_text("Offline");
+            self.network_state_button
+                .set_tooltip_text(Some("Lucide is unavailable: internet is required"));
+            self.retry_button.set_visible(true);
             self.search_entry.set_sensitive(false);
             self.icon_grid.set_sensitive(false);
             self.color_entry.set_sensitive(false);
@@ -618,10 +645,15 @@ fn populate_grid(
     };
 
     for icon_name in icons {
-        let tile = gtk::Box::new(gtk::Orientation::Vertical, 6);
+        let tile = gtk::Box::new(gtk::Orientation::Vertical, 8);
+        tile.set_hexpand(true);
+        tile.set_vexpand(true);
         tile.set_halign(gtk::Align::Center);
         tile.set_valign(gtk::Align::Center);
-        tile.set_size_request(112, 112);
+        tile.set_margin_top(8);
+        tile.set_margin_bottom(8);
+        tile.set_margin_start(8);
+        tile.set_margin_end(8);
 
         match service.and_then(|svc| svc.preview_icon_svg(icon_name, &preview_settings).ok()) {
             Some(path) => {
@@ -629,12 +661,14 @@ fn populate_grid(
                 image.set_from_file(Some(path.to_string_lossy().as_ref()));
                 image.set_pixel_size(GRID_PIXEL_SIZE);
                 image.set_halign(gtk::Align::Center);
+                image.set_valign(gtk::Align::Center);
                 tile.append(&image);
             }
             None => {
                 let image = gtk::Image::from_icon_name("image-missing");
                 image.set_pixel_size(GRID_PIXEL_SIZE - 4);
                 image.set_halign(gtk::Align::Center);
+                image.set_valign(gtk::Align::Center);
                 tile.append(&image);
             }
         }
@@ -642,14 +676,31 @@ fn populate_grid(
         let label = gtk::Label::new(Some(icon_name));
         label.set_wrap(true);
         label.set_ellipsize(gtk::pango::EllipsizeMode::End);
+        label.set_justify(gtk::Justification::Center);
+        label.set_lines(2);
         label.set_xalign(0.5);
         label.set_max_width_chars(12);
-        label.add_css_class("caption");
         tile.append(&label);
+
+        let tile_button = gtk::Button::new();
+        tile_button.add_css_class("flat");
+        tile_button.set_halign(gtk::Align::Center);
+        tile_button.set_valign(gtk::Align::Center);
+        tile_button.set_size_request(GRID_ITEM_SIZE, GRID_ITEM_SIZE);
+        tile_button.set_child(Some(&tile));
 
         let child = gtk::FlowBoxChild::new();
         child.set_widget_name(icon_name);
-        child.set_child(Some(&tile));
+        child.set_halign(gtk::Align::Center);
+        child.set_valign(gtk::Align::Center);
+        child.set_child(Some(&tile_button));
+
+        let child_for_click = child.clone();
+        let grid_for_click = grid.clone();
+        tile_button.connect_clicked(move |_| {
+            grid_for_click.select_child(&child_for_click);
+        });
+
         grid.insert(&child, -1);
     }
 
