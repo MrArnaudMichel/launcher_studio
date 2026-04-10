@@ -1,5 +1,8 @@
 use crate::services::lucide_service::{LucideRenderSettings, LucideService};
-use adw::{HeaderBar as AdwHeaderBar, prelude::*};
+use adw::{
+    HeaderBar as AdwHeaderBar, ToolbarView as AdwToolbarView, Window as AdwWindow,
+    WindowTitle as AdwWindowTitle, prelude::*,
+};
 use gtk4 as gtk;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -12,9 +15,11 @@ const DEFAULT_COLOR: &str = "#ffffff";
 const DEFAULT_STROKE_WIDTH: f64 = 2.0;
 const STACK_RESULTS: &str = "results";
 const STACK_STATE: &str = "state";
+const CONTENT_PADDING: i32 = 16;
+const SECTION_SPACING: i32 = 12;
 
 pub struct IconPickerDialog {
-    window: gtk::Window,
+    window: AdwWindow,
     network_label: gtk::Label,
     retry_button: gtk::Button,
     search_entry: gtk::SearchEntry,
@@ -36,7 +41,7 @@ pub struct IconPickerDialog {
 
 impl IconPickerDialog {
     pub fn new(parent: Option<&impl IsA<gtk::Window>>) -> Self {
-        let window = gtk::Window::builder()
+        let window = AdwWindow::builder()
             .title("Lucide icons")
             .modal(true)
             .default_width(1120)
@@ -52,20 +57,22 @@ impl IconPickerDialog {
         }
 
         let header = AdwHeaderBar::new();
+        let header_title = AdwWindowTitle::new("Lucide Icon Picker", "GNOME style integration");
+        header.set_title_widget(Some(&header_title));
+
         let cancel_button = gtk::Button::with_label("Cancel");
-        cancel_button.add_css_class("flat");
         let use_button = gtk::Button::with_label("Use this icon");
         use_button.add_css_class("suggested-action");
         use_button.set_sensitive(false);
-        header.pack_start(&cancel_button);
-        header.pack_end(&use_button);
-        window.set_titlebar(Some(&header));
 
-        let main_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
-        main_box.set_margin_top(12);
-        main_box.set_margin_bottom(12);
-        main_box.set_margin_start(12);
-        main_box.set_margin_end(12);
+        let toolbar_view = AdwToolbarView::new();
+        toolbar_view.add_top_bar(&header);
+
+        let main_box = gtk::Box::new(gtk::Orientation::Vertical, SECTION_SPACING);
+        main_box.set_margin_top(CONTENT_PADDING);
+        main_box.set_margin_bottom(CONTENT_PADDING);
+        main_box.set_margin_start(CONTENT_PADDING);
+        main_box.set_margin_end(CONTENT_PADDING);
 
         let title_label = gtk::Label::new(Some(
             "Search Lucide icons, preview them, then tune color and stroke width.",
@@ -98,6 +105,12 @@ impl IconPickerDialog {
         content_paned.set_vexpand(true);
         content_paned.set_position(650);
         main_box.append(&content_paned);
+
+        let actions_row = gtk::Box::new(gtk::Orientation::Horizontal, SECTION_SPACING);
+        actions_row.set_halign(gtk::Align::Center);
+        actions_row.append(&cancel_button);
+        actions_row.append(&use_button);
+        main_box.append(&actions_row);
 
         let icon_grid = gtk::FlowBox::new();
         icon_grid.set_selection_mode(gtk::SelectionMode::Single);
@@ -162,16 +175,16 @@ impl IconPickerDialog {
             .min_content_width(320)
             .build();
 
-        let settings_box = gtk::Box::new(gtk::Orientation::Vertical, 12);
+        let settings_box = gtk::Box::new(gtk::Orientation::Vertical, SECTION_SPACING);
 
         let preview_frame = gtk::Frame::new(None);
         preview_frame.set_label(Some("Preview"));
 
         let preview_stack = gtk::Box::new(gtk::Orientation::Vertical, 8);
-        preview_stack.set_margin_top(12);
-        preview_stack.set_margin_bottom(12);
-        preview_stack.set_margin_start(12);
-        preview_stack.set_margin_end(12);
+        preview_stack.set_margin_top(CONTENT_PADDING);
+        preview_stack.set_margin_bottom(CONTENT_PADDING);
+        preview_stack.set_margin_start(CONTENT_PADDING);
+        preview_stack.set_margin_end(CONTENT_PADDING);
         preview_stack.set_halign(gtk::Align::Center);
 
         let preview_image = gtk::Image::new();
@@ -190,10 +203,10 @@ impl IconPickerDialog {
         style_frame.set_label(Some("Style settings"));
 
         let style_box = gtk::Box::new(gtk::Orientation::Vertical, 8);
-        style_box.set_margin_top(12);
-        style_box.set_margin_bottom(12);
-        style_box.set_margin_start(12);
-        style_box.set_margin_end(12);
+        style_box.set_margin_top(CONTENT_PADDING);
+        style_box.set_margin_bottom(CONTENT_PADDING);
+        style_box.set_margin_start(CONTENT_PADDING);
+        style_box.set_margin_end(CONTENT_PADDING);
 
         let color_row = gtk::Box::new(gtk::Orientation::Horizontal, 8);
         let color_lbl = gtk::Label::new(Some("Color"));
@@ -232,8 +245,9 @@ impl IconPickerDialog {
 
         settings_scroll.set_child(Some(&settings_box));
         content_paned.set_end_child(Some(&settings_scroll));
-
-        window.set_child(Some(&main_box));
+        toolbar_view.set_content(Some(&main_box));
+        window.set_content(Some(&toolbar_view));
+        window.set_default_widget(Some(&use_button));
 
         let selected_icon = Rc::new(RefCell::new(None));
         let lucide_service = LucideService::new().ok().map(Rc::new);
