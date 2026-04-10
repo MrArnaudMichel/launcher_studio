@@ -23,7 +23,7 @@ pub struct LucideRenderSettings {
 impl Default for LucideRenderSettings {
     fn default() -> Self {
         Self {
-            color_hex: "#2563eb".to_string(),
+            color_hex: "#ffffff".to_string(),
             stroke_width: 2.0,
             size: 24,
         }

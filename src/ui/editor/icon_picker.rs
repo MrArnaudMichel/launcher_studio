@@ -121,8 +121,8 @@ impl IconPickerDialog {
         color_lbl.set_width_chars(12);
         color_lbl.set_xalign(0.0);
         let color_entry = gtk::Entry::new();
-        color_entry.set_text("#2563eb");
-        color_entry.set_placeholder_text(Some("#2563eb"));
+        color_entry.set_text("#ffffff");
+        color_entry.set_placeholder_text(Some("#ffffff"));
         color_entry.set_hexpand(true);
         color_row.append(&color_lbl);
         color_row.append(&color_entry);
