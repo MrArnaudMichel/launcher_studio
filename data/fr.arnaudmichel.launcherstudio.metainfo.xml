@@ -60,6 +60,13 @@
   </screenshots>
 
   <releases>
+    <release version="0.1.4" date="2026-09-10">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.4</url>
+      <description>
+        <p>Add GitHub release workflow and update to version 0.1.4 with dependency upgrades and release notes integration</p>
+        <p xml:lang="fr">Ajout du workflow de release GitHub et mise à jour vers la version 0.1.4 avec des upgrades de dependances et intégration des notes de version</p>
+      </description>
+    </release>
     <release version="0.1.3" date="2026-04-10">
       <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.3</url>
       <description>

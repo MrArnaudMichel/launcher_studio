@@ -1,0 +1,132 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Extract version and release notes
+        id: extract
+        run: |
+          python3 - << 'EOF'
+          import os
+          import re
+          import xml.etree.ElementTree as ET
+
+          # 1. Extract package version from Cargo.toml
+          version = None
+          try:
+              import tomllib
+              with open("Cargo.toml", "rb") as f:
+                  data = tomllib.load(f)
+                  version = data.get("package", {}).get("version")
+          except Exception:
+              pass
+
+          if not version:
+              with open("Cargo.toml", "r", encoding="utf-8") as f:
+                  content = f.read()
+              match = re.search(r'(?m)^\s*version\s*=\s*["\']([^"\']+)["\']', content)
+              if match:
+                  version = match.group(1)
+
+          if not version:
+              raise ValueError("Could not determine package version from Cargo.toml")
+
+          tag = f"v{version}"
+
+          # 2. Extract release notes from AppStream Metainfo XML
+          metainfo_path = "data/fr.arnaudmichel.launcherstudio.metainfo.xml"
+          notes = ""
+
+          if os.path.exists(metainfo_path):
+              try:
+                  tree = ET.parse(metainfo_path)
+                  root = tree.getroot()
+                  for rel in root.findall(".//release"):
+                      if rel.get("version") == version:
+                          desc = rel.find("description")
+                          if desc is not None:
+                              blocks = []
+                              for child in desc:
+                                  # Skip localized elements (xml:lang) to keep the default language notes
+                                  if any(k.endswith("lang") for k in child.attrib.keys()):
+                                      continue
+                                  if child.tag == "p":
+                                      text = "".join(child.itertext()).strip()
+                                      if text:
+                                          blocks.append(text)
+                                  elif child.tag in ("ul", "ol"):
+                                      items = []
+                                      for li in child.findall("li"):
+                                          if any(k.endswith("lang") for k in li.attrib.keys()):
+                                              continue
+                                          li_text = "".join(li.itertext()).strip()
+                                          if li_text:
+                                              items.append(f"- {li_text}")
+                                      if items:
+                                          blocks.append("\n".join(items))
+                              notes = "\n\n".join(blocks).strip()
+                          break
+              except Exception as e:
+                  print(f"Warning: Failed to parse metainfo.xml: {e}")
+
+          if not notes:
+              notes = f"Release {tag}"
+
+          with open("RELEASE_NOTES.md", "w", encoding="utf-8") as f:
+              f.write(notes + "\n")
+
+          github_output = os.environ.get("GITHUB_OUTPUT")
+          if github_output:
+              with open(github_output, "a", encoding="utf-8") as f:
+                  f.write(f"version={version}\n")
+                  f.write(f"tag={tag}\n")
+
+          print(f"Extracted version: {version}")
+          print(f"Extracted tag: {tag}")
+          print("Release notes preview:\n" + notes)
+          EOF
+
+      - name: Check if release tag already exists
+        id: check_tag
+        run: |
+          TAG="${{ steps.extract.outputs.tag }}"
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists on remote. Skipping release."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag $TAG does not exist on remote. Proceeding with release."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check_tag.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.extract.outputs.tag }}"
+          gh release create "$TAG" \
+            --title "$TAG" \
+            --notes-file RELEASE_NOTES.md \
+            --target "${{ github.sha }}"
