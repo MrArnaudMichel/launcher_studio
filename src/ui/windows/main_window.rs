@@ -5,36 +5,42 @@ use crate::ui::windows::{actions, list_manager};
 use adw::{
     ApplicationWindow as AdwApplicationWindow, HeaderBar as AdwHeaderBar, ToolbarView, prelude::*,
 };
-use gtk4::{Align, Application, Box as GtkBox, Button, Orientation, ScrolledWindow};
+use gtk4::{Align, Application, Box as GtkBox, Button, Orientation, Paned, ScrolledWindow};
 use std::rc::Rc;
+
 pub fn show_main_window(app: &impl IsA<Application>) {
     let app: Application = app.upcast_ref::<Application>().clone();
     let win = AdwApplicationWindow::builder()
         .application(&app)
         .title("Launcher Studio")
-        .default_width(1000)
-        .default_height(700)
+        .default_width(1050)
+        .default_height(720)
         .resizable(true)
         .build();
     setup_css();
     let header = AdwHeaderBar::new();
     header.pack_end(&theme::create_theme_button());
+
     let root = GtkBox::new(Orientation::Vertical, 6);
     root.set_margin_top(0);
     root.set_margin_bottom(12);
     root.set_margin_start(12);
     root.set_margin_end(12);
+
     let menubar = crate::ui::components::menu_bar::build_menu_bar(&app);
     let toolbar_data = crate::ui::components::toolbar::build_toolbar();
     let sidebar_data = crate::ui::components::sidebar::build_sidebar();
+    let list_mgr = list_manager::LauncherListManager::new(sidebar_data);
     let status_data = crate::ui::components::status_bar::build_status_bar();
     let editor = entry_form::build_editor();
     let state = state::new_state();
+
     let scroller = ScrolledWindow::builder()
         .hexpand(true)
         .vexpand(true)
         .build();
     scroller.set_child(Some(&editor.notebook));
+
     {
         let st = state.clone();
         entry_form::wire_source_sync(&editor, move || {
@@ -42,22 +48,33 @@ pub fn show_main_window(app: &impl IsA<Application>) {
         });
     }
     state.borrow_mut().is_dirty = false;
+
     let buttons = build_action_buttons();
-    let main_area = GtkBox::new(Orientation::Horizontal, 12);
-    main_area.append(&sidebar_data.container);
-    main_area.append(&scroller);
+
+    let main_paned = Paned::new(Orientation::Horizontal);
+    main_paned.set_start_child(Some(&list_mgr.sidebar.container));
+    main_paned.set_end_child(Some(&scroller));
+    main_paned.set_position(250);
+    main_paned.set_shrink_start_child(false);
+    main_paned.set_shrink_end_child(false);
+    main_paned.set_hexpand(true);
+    main_paned.set_vexpand(true);
+
     root.append(&menubar);
     root.append(&toolbar_data.container);
-    root.append(&main_area);
+    root.append(&main_paned);
     root.append(&buttons.container);
     root.append(&status_data.container);
+
     let toolbar_view = ToolbarView::new();
     toolbar_view.add_top_bar(&header);
     toolbar_view.set_content(Some(&root));
     win.set_content(Some(&toolbar_view));
+
     let widgets = editor.widgets.clone();
-    let listbox = sidebar_data.listbox.clone();
+    let listbox = list_mgr.sidebar.listbox.clone();
     let status_label = status_data.label.clone();
+
     let ensure_temp_row = {
         let lb = listbox.clone();
         let st = state.clone();
@@ -65,13 +82,26 @@ pub fn show_main_window(app: &impl IsA<Application>) {
         let ie = widgets.icon_entry.clone();
         Rc::new(move || list_manager::create_temp_row(&lb, &st, &ne, &ie))
     };
+
     let refresh_list = {
-        let lb = listbox.clone();
+        let mgr = list_mgr.clone();
         let st = state.clone();
         let sl = status_label.clone();
         let etr = ensure_temp_row.clone();
-        Rc::new(move || list_manager::refresh_desktop_list(&lb, &st, &sl, &*etr))
+        Rc::new(move || mgr.refresh_list(&st, &sl, &*etr))
     };
+
+    // Register focus search action on window
+    {
+        let focus_search_action = gtk4::gio::SimpleAction::new("focus_search", None);
+        let se = list_mgr.sidebar.search_entry.clone();
+        focus_search_action.connect_activate(move |_, _| {
+            se.grab_focus();
+        });
+        win.add_action(&focus_search_action);
+        app.set_accels_for_action("win.focus_search", &["<Ctrl>F"]);
+    }
+
     actions::register_actions(
         &app,
         &win,
@@ -173,11 +203,15 @@ fn connect_action_buttons(
     let wn = win.clone();
     let sl = status_label.clone();
     let rl = refresh_list.clone();
-    buttons.delete.connect_clicked(move |_| {
-        actions::do_delete(&s, &w, &wn, &sl, {
-            let r = rl.clone();
-            move || r()
-        });
+    buttons.delete.connect_clicked({
+        let sl = sl.clone();
+        let rl = rl.clone();
+        move |_| {
+            actions::do_delete(&s, &w, &wn, &sl, {
+                let r = rl.clone();
+                move || r()
+            });
+        }
     });
     let w = widgets.clone();
     let wn = win.clone();
@@ -188,6 +222,9 @@ fn connect_action_buttons(
     let s = state.clone();
     let wn = win.clone();
     buttons.save.connect_clicked(move |_| {
-        actions::do_save(&w, &s, &wn);
+        actions::do_save(&w, &s, &wn, &sl, {
+            let r = rl.clone();
+            move || r()
+        });
     });
 }

@@ -319,14 +319,15 @@ impl IconPickerDialog {
         });
 
         let this = self.clone_handles();
-        self.icon_grid.connect_selected_children_changed(move |flowbox| {
-            if let Some(child) = flowbox.selected_children().first() {
-                let icon_name = child.widget_name().to_string();
-                this.select_icon(&icon_name);
-            } else {
-                this.use_button.set_sensitive(false);
-            }
-        });
+        self.icon_grid
+            .connect_selected_children_changed(move |flowbox| {
+                if let Some(child) = flowbox.selected_children().first() {
+                    let icon_name = child.widget_name().to_string();
+                    this.select_icon(&icon_name);
+                } else {
+                    this.use_button.set_sensitive(false);
+                }
+            });
 
         let this = self.clone_handles();
         self.icon_grid.connect_child_activated(move |_, child| {
@@ -368,7 +369,8 @@ impl IconPickerDialog {
 
         match svc.preview_icon_svg(&icon_name, &settings) {
             Ok(path) => {
-                self.preview_image.set_from_file(Some(path.to_string_lossy().as_ref()));
+                self.preview_image
+                    .set_from_file(Some(path.to_string_lossy().as_ref()));
                 self.preview_image.set_pixel_size(PREVIEW_PIXEL_SIZE);
                 self.preview_name.set_text(&icon_name);
                 self.use_button.set_sensitive(true);
@@ -513,7 +515,12 @@ impl IconPickerDialog {
             return;
         }
 
-        populate_grid(&self.icon_grid, self.lucide_service.as_deref(), &icons, &settings);
+        populate_grid(
+            &self.icon_grid,
+            self.lucide_service.as_deref(),
+            &icons,
+            &settings,
+        );
         self.status_label.set_text(&status_text);
         self.result_stack.set_visible_child_name(STACK_RESULTS);
 
@@ -561,16 +568,16 @@ impl IconPickerDialog {
             self.network_icon
                 .set_icon_name(Some("network-wireless-signal-excellent-symbolic"));
             self.network_label.set_text("Online");
-            self.network_state_button.set_tooltip_text(Some(
-                "Lucide is available: internet connection is active",
-            ));
+            self.network_state_button
+                .set_tooltip_text(Some("Lucide is available: internet connection is active"));
             self.retry_button.set_visible(false);
             self.search_entry.set_sensitive(true);
             self.icon_grid.set_sensitive(true);
             self.color_entry.set_sensitive(true);
             self.stroke_spin.set_sensitive(true);
         } else {
-            self.network_icon.set_icon_name(Some("network-offline-symbolic"));
+            self.network_icon
+                .set_icon_name(Some("network-offline-symbolic"));
             self.network_label.set_text("Offline");
             self.network_state_button
                 .set_tooltip_text(Some("Lucide is unavailable: internet is required"));
@@ -620,11 +627,11 @@ fn select_child_by_name(grid: &gtk::FlowBox, name: &str) -> bool {
     let mut current = grid.first_child();
     while let Some(widget) = current {
         current = widget.next_sibling();
-        if let Some(child) = widget.downcast_ref::<gtk::FlowBoxChild>() {
-            if child.widget_name() == name {
-                grid.select_child(child);
-                return true;
-            }
+        if let Some(child) = widget.downcast_ref::<gtk::FlowBoxChild>()
+            && child.widget_name() == name
+        {
+            grid.select_child(child);
+            return true;
         }
     }
     false

@@ -163,7 +163,6 @@ impl LucideService {
 
         let body = apply_render_settings(&body, &normalized);
 
-
         fs::write(&target_path, body)
             .with_context(|| format!("Cannot save {}", target_path.display()))?;
 

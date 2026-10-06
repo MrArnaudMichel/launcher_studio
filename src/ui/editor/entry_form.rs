@@ -330,9 +330,18 @@ fn show_file_chooser(entry: &Entry, title: &str, action: FileChooserAction, pref
     );
     // Set initial folder to user's home directory
     if let Some(home_dir) = std::env::var_os("HOME") {
-        dialog
-            .set_current_folder(Some(&File::for_path(home_dir)))
-            .expect("Failed to set initial folder");
+        let _ = dialog.set_current_folder(Some(&File::for_path(home_dir)));
+    }
+    for icon_dir in [
+        "/usr/share/icons",
+        "/usr/share/pixmaps",
+        "/run/host/usr/share/icons",
+        "/run/host/usr/share/pixmaps",
+    ] {
+        let p = std::path::Path::new(icon_dir);
+        if p.is_dir() {
+            let _ = dialog.add_shortcut_folder(&File::for_path(p));
+        }
     }
     let e = entry.clone();
     dialog.connect_response(move |d, resp| {
@@ -364,9 +373,20 @@ fn show_exec_file_chooser(entry: &Entry) {
     );
 
     if let Some(home_dir) = std::env::var_os("HOME") {
-        dialog
-            .set_current_folder(Some(&File::for_path(home_dir)))
-            .expect("Failed to set initial folder");
+        let _ = dialog.set_current_folder(Some(&File::for_path(home_dir)));
+    }
+
+    for bin_dir in [
+        "/usr/bin",
+        "/usr/local/bin",
+        "/run/host/usr/bin",
+        "/run/host/usr/local/bin",
+        "/app/bin",
+    ] {
+        let p = std::path::Path::new(bin_dir);
+        if p.is_dir() {
+            let _ = dialog.add_shortcut_folder(&File::for_path(p));
+        }
     }
 
     let e = entry.clone();
@@ -542,15 +562,15 @@ fn refresh_icon_preview(e: &Entry) {
     } else if txt.contains('/') {
         // Try to load as image file (SVG, PNG, etc.)
         let path = &txt;
-        if path.ends_with(".svg") || path.ends_with(".png") || path.ends_with(".jpg")
-            || path.ends_with(".jpeg") || path.ends_with(".gif") {
-            match gdk::Texture::from_file(&File::for_path(path)) {
-                Ok(tex) => {
-                    e.set_icon_from_paintable(EntryIconPosition::Primary, Some(&tex));
-                    return;
-                }
-                Err(_) => {}
-            }
+        if (path.ends_with(".svg")
+            || path.ends_with(".png")
+            || path.ends_with(".jpg")
+            || path.ends_with(".jpeg")
+            || path.ends_with(".gif"))
+            && let Ok(tex) = gdk::Texture::from_file(&File::for_path(path))
+        {
+            e.set_icon_from_paintable(EntryIconPosition::Primary, Some(&tex));
+            return;
         }
         // Fall back to icon theme if file loading fails
         e.set_icon_from_icon_name(EntryIconPosition::Primary, Some("image-missing"));

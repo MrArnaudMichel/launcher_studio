@@ -25,6 +25,8 @@
     <ul>
       <li>Basic editor for name, executable path, and icon selection.</li>
       <li xml:lang="fr">Éditeur simple pour le nom, le chemin de l'exécutable et le choix de l'icône.</li>
+      <li>Comprehensive launcher management: Browse, search, and filter user, system (/usr), and Flatpak applications.</li>
+      <li xml:lang="fr">Gestion complète des lanceurs : Parcourez, recherchez et filtrez les applications utilisateur, système (/usr) et Flatpak.</li>
       <li>Advanced settings: Categories, Keywords, MimeTypes, and Startup notifications.</li>
       <li xml:lang="fr">Paramètres avancés : Catégories, Mots-clés, Types MIME et notifications de démarrage.</li>
       <li>Raw Source View: Inspect and edit the .desktop file content directly.</li>
@@ -60,6 +62,29 @@
   </screenshots>
 
   <releases>
+    <release version="0.1.5" date="2026-09-10">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.5</url>
+      <description>
+        <p>Major release introducing full system and Flatpak desktop launcher management, real-time search, sidebar location filtering, and an overhauled UI/UX.</p>
+        <p xml:lang="fr">Version majeure introduisant la prise en charge complète des lanceurs système et Flatpak, la recherche instantanée, le filtrage par emplacement dans la barre latérale et une interface modernisée.</p>
+        <ul>
+          <li>Added support for discovering and inspecting system-wide launchers in /usr/share/applications, XDG data directories, and Flatpak application paths.</li>
+          <li xml:lang="fr">Prise en charge de la découverte et de l'inspection des lanceurs système dans /usr/share/applications, les répertoires XDG et les chemins Flatpak.</li>
+          <li>Safe editing of system launchers with automatic user override saving to ~/.local/share/applications without requiring root permissions.</li>
+          <li xml:lang="fr">Édition sécurisée des lanceurs système avec enregistrement automatique en surcharge utilisateur dans ~/.local/share/applications sans droits root.</li>
+          <li>Added new "Import System Launcher" dialog and keyboard shortcuts (Ctrl+Alt+O / Ctrl+I) to easily duplicate and customize system applications.</li>
+          <li xml:lang="fr">Ajout d'une boîte de dialogue « Importer un lanceur système » et de raccourcis dédiés (Ctrl+Alt+O / Ctrl+I) pour dupliquer et personnaliser facilement les applications système.</li>
+          <li>Added instant real-time search bar (Ctrl+F) with multi-field matching across launcher name, executable command, comment, categories, and filenames.</li>
+          <li xml:lang="fr">Ajout d'une barre de recherche instantanée (Ctrl+F) filtrant sur le nom, la commande exécutable, le commentaire, les catégories et le nom de fichier.</li>
+          <li>Added segmented location filters (All, Home, /usr, Flatpak) with reactive application count badges.</li>
+          <li xml:lang="fr">Ajout de filtres segmentés par emplacement (Tous, Home, /usr, Flatpak) avec badges de comptage réactifs.</li>
+          <li>Redesigned sidebar rows with launcher icons, location badges, filenames, and rich hover tooltips.</li>
+          <li xml:lang="fr">Refonte visuelle de la liste des lanceurs avec icônes, badges de provenance, noms de fichiers et info-bulles détaillées.</li>
+          <li>Improved application layout with a resizable split pane and an intuitive empty state when no search results match.</li>
+          <li xml:lang="fr">Amélioration de la disposition avec panneau redimensionnable et vue d'état vide intuitive en l'absence de résultat de recherche.</li>
+        </ul>
+      </description>
+    </release>
     <release version="0.1.4" date="2026-09-10">
       <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.4</url>
       <description>

@@ -98,7 +98,7 @@ pub fn show_save_success<W: IsA<Window>>(parent: &W, path: std::path::PathBuf, i
     let (title, text) = if is_update {
         ("Saved", ".desktop file updated")
     } else {
-        ("Saved", ".desktop file created")
+        ("Saved", ".desktop file saved to user applications")
     };
     let dialog = gtk4::MessageDialog::builder()
         .transient_for(parent)
@@ -117,11 +117,28 @@ pub fn show_save_success<W: IsA<Window>>(parent: &W, path: std::path::PathBuf, i
         if resp == ResponseType::Accept {
             #[cfg(target_os = "linux")]
             if let Some(parent) = path.parent() {
-                let _ = open::that(parent);
+                let uri = format!("file://{}", parent.display());
+                let app_ctx = gtk4::gio::AppLaunchContext::new();
+                if gtk4::gio::AppInfo::launch_default_for_uri(&uri, Some(&app_ctx)).is_err() {
+                    let _ = open::that(parent);
+                }
             }
         }
         d.close();
     });
+    dialog.show();
+}
+
+pub fn show_system_file_info<W: IsA<Window>>(parent: &W, msg: &str) {
+    let dialog = gtk4::MessageDialog::builder()
+        .transient_for(parent)
+        .modal(true)
+        .title("System Application (Read-Only)")
+        .text("System Application")
+        .secondary_text(msg)
+        .build();
+    dialog.add_button("Close", ResponseType::Close);
+    dialog.connect_response(|d, _| d.close());
     dialog.show();
 }
 

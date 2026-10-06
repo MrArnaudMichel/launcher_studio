@@ -15,20 +15,29 @@
 - Icon service caching to reduce repeated theme scans
 - AppImage-friendly executable picker (auto chmod + executable-safe Exec output)
 - Lucide icon search with local SVG download for persistent .desktop icons
+- Multi-source launcher discovery: user (`~/.local/share/applications`), system (`/usr/share/applications`), and Flatpak paths
+- Safe system launcher editing with automatic user override saving
+- Instant real-time search with multi-field filtering (`Ctrl+F`)
+- Sidebar location filter bar with reactive application count badges (All, Home, /usr, Flatpak)
 
 ## Features
 
-- User-friendly GUI for creating `.desktop` files.
+- User-friendly GUI for creating and managing `.desktop` files.
 - Supports all major desktop entry fields, including advanced options.
 - Localized fields for multi-language support.
 - Automatically saves launchers to `~/.local/share/applications`.
+- System and Flatpak launcher inspection and import workflow.
+- Fast live search and categorized location filtering.
 
 ## Keyboard Shortcuts
 
 - `Ctrl+N`: New
 - `Ctrl+O`: Open
+- `Ctrl+Alt+O` / `Ctrl+I`: Import System Launcher
 - `Ctrl+S`: Save
 - `Ctrl+Shift+S`: Save As
+- `Ctrl+F`: Focus search bar
+- `Esc`: Clear search / filter
 - `F5`: Refresh
 - `Ctrl+Q`: Quit
 - `F11`: Toggle fullscreen

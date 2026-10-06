@@ -10,15 +10,17 @@ pub fn build_menu_bar(_app: &Application) -> PopoverMenuBar {
     // File menu
     let file_menu = Menu::new();
     file_menu.append(Some("New"), Some("app.new"));
-    file_menu.append(Some("Open"), Some("app.open"));
+    file_menu.append(Some("Open..."), Some("app.open"));
+    file_menu.append(Some("Import System Launcher..."), Some("app.import_system"));
     file_menu.append(Some("Save"), Some("app.save"));
-    file_menu.append(Some("Save As"), Some("app.save_as"));
+    file_menu.append(Some("Save As..."), Some("app.save_as"));
     file_menu.append(Some("Refresh"), Some("app.refresh"));
     file_menu.append(Some("Quit"), Some("app.quit"));
     menu_model.append_submenu(Some("File"), &file_menu);
 
     // View menu
     let view_menu = Menu::new();
+    view_menu.append(Some("Find Launcher..."), Some("win.focus_search"));
     view_menu.append(Some("Toggle Fullscreen"), Some("win.toggle_fullscreen"));
     menu_model.append_submenu(Some("View"), &view_menu);
 
