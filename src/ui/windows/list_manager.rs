@@ -195,16 +195,12 @@ impl LauncherListManager {
             })
             .count();
 
-        self.sidebar.btn_all.set_label(&format!("All ({})", total));
+        self.sidebar.count_all.set_text(&total.to_string());
+        self.sidebar.count_home.set_text(&user_count.to_string());
+        self.sidebar.count_system.set_text(&sys_count.to_string());
         self.sidebar
-            .btn_home
-            .set_label(&format!("Home ({})", user_count));
-        self.sidebar
-            .btn_system
-            .set_label(&format!("/usr ({})", sys_count));
-        self.sidebar
-            .btn_flatpak
-            .set_label(&format!("Flatpak ({})", flatpak_count));
+            .count_flatpak
+            .set_text(&flatpak_count.to_string());
 
         if cur_query.trim().is_empty() {
             match cur_filter {

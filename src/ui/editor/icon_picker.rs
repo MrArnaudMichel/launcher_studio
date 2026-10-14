@@ -51,6 +51,8 @@ impl IconPickerDialog {
             .modal(true)
             .default_width(1120)
             .default_height(760)
+            .width_request(360)
+            .height_request(294)
             .resizable(true)
             .build();
 
@@ -115,11 +117,11 @@ impl IconPickerDialog {
         search_entry.set_hexpand(true);
         main_box.append(&search_entry);
 
-        let content_paned = gtk::Paned::new(gtk::Orientation::Horizontal);
-        content_paned.set_hexpand(true);
-        content_paned.set_vexpand(true);
-        content_paned.set_position(650);
-        main_box.append(&content_paned);
+        // Grid and settings side by side; stacked vertically on narrow windows.
+        let content_box = gtk::Box::new(gtk::Orientation::Horizontal, SECTION_SPACING);
+        content_box.set_hexpand(true);
+        content_box.set_vexpand(true);
+        main_box.append(&content_box);
 
         let actions_row = gtk::Box::new(gtk::Orientation::Horizontal, SECTION_SPACING);
         actions_row.set_halign(gtk::Align::Center);
@@ -130,7 +132,7 @@ impl IconPickerDialog {
         let icon_grid = gtk::FlowBox::new();
         icon_grid.set_selection_mode(gtk::SelectionMode::Single);
         icon_grid.set_activate_on_single_click(true);
-        icon_grid.set_min_children_per_line(4);
+        icon_grid.set_min_children_per_line(2);
         icon_grid.set_max_children_per_line(6);
         icon_grid.set_column_spacing(GRID_COLUMN_SPACING);
         icon_grid.set_row_spacing(GRID_ROW_SPACING);
@@ -181,7 +183,7 @@ impl IconPickerDialog {
         result_stack.add_named(&results_page, Some(STACK_RESULTS));
         result_stack.add_named(&state_page, Some(STACK_STATE));
 
-        content_paned.set_start_child(Some(&result_stack));
+        content_box.append(&result_stack);
 
         let settings_scroll = gtk::ScrolledWindow::builder()
             .hexpand(false)
@@ -259,7 +261,35 @@ impl IconPickerDialog {
         settings_box.append(&style_frame);
 
         settings_scroll.set_child(Some(&settings_box));
-        content_paned.set_end_child(Some(&settings_scroll));
+        content_box.append(&settings_scroll);
+
+        let narrow = adw::Breakpoint::new(
+            adw::BreakpointCondition::parse("max-width: 700sp")
+                .expect("valid breakpoint condition"),
+        );
+        narrow.add_setter(
+            &content_box,
+            "orientation",
+            Some(&gtk::Orientation::Vertical.to_value()),
+        );
+        narrow.add_setter(
+            &settings_scroll,
+            "min-content-width",
+            Some(&(-1i32).to_value()),
+        );
+        narrow.add_setter(&settings_scroll, "vexpand", Some(&false.to_value()));
+        narrow.add_setter(
+            &settings_scroll,
+            "propagate-natural-height",
+            Some(&true.to_value()),
+        );
+        narrow.add_setter(
+            &settings_scroll,
+            "max-content-height",
+            Some(&220i32.to_value()),
+        );
+        narrow.add_setter(&title_label, "visible", Some(&false.to_value()));
+        window.add_breakpoint(narrow);
         toolbar_view.set_content(Some(&main_box));
         window.set_content(Some(&toolbar_view));
         window.set_default_widget(Some(&use_button));

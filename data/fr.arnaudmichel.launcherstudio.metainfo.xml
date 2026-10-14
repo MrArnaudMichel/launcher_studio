@@ -38,6 +38,15 @@
 
   <launchable type="desktop-id">fr.arnaudmichel.launcherstudio.desktop</launchable>
 
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <supports>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </supports>
+
   <screenshots>
     <screenshot type="default">
       <caption>The main editor interface</caption>

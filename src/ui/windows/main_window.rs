@@ -3,10 +3,16 @@ use crate::ui::state;
 use crate::ui::theme;
 use crate::ui::windows::{actions, list_manager};
 use adw::{
-    ApplicationWindow as AdwApplicationWindow, HeaderBar as AdwHeaderBar, ToolbarView, prelude::*,
+    ApplicationWindow as AdwApplicationWindow, Breakpoint, BreakpointCondition, Clamp,
+    HeaderBar as AdwHeaderBar, NavigationPage, NavigationSplitView, ToolbarView, prelude::*,
 };
-use gtk4::{Align, Application, Box as GtkBox, Button, Orientation, Paned, ScrolledWindow};
+use gtk4::{Align, Application, Box as GtkBox, Button, Orientation, ScrolledWindow};
 use std::rc::Rc;
+
+// Below this width the editor form puts labels above fields.
+const COMPACT_FORM_CONDITION: &str = "max-width: 860sp";
+// Below this width the sidebar and editor become stacked pages (phones).
+const COLLAPSED_CONDITION: &str = "max-width: 600sp";
 
 pub fn show_main_window(app: &impl IsA<Application>) {
     let app: Application = app.upcast_ref::<Application>().clone();
@@ -15,19 +21,13 @@ pub fn show_main_window(app: &impl IsA<Application>) {
         .title("Launcher Studio")
         .default_width(1050)
         .default_height(720)
+        .width_request(360)
+        .height_request(294)
         .resizable(true)
         .build();
     setup_css();
-    let header = AdwHeaderBar::new();
-    header.pack_end(&theme::create_theme_button());
 
-    let root = GtkBox::new(Orientation::Vertical, 6);
-    root.set_margin_top(0);
-    root.set_margin_bottom(12);
-    root.set_margin_start(12);
-    root.set_margin_end(12);
-
-    let menubar = crate::ui::components::menu_bar::build_menu_bar(&app);
+    let menu_button = crate::ui::components::menu_bar::build_primary_menu_button();
     let toolbar_data = crate::ui::components::toolbar::build_toolbar();
     let sidebar_data = crate::ui::components::sidebar::build_sidebar();
     let list_mgr = list_manager::LauncherListManager::new(sidebar_data);
@@ -35,11 +35,17 @@ pub fn show_main_window(app: &impl IsA<Application>) {
     let editor = entry_form::build_editor();
     let state = state::new_state();
 
+    let clamp = Clamp::builder()
+        .maximum_size(900)
+        .tightening_threshold(600)
+        .child(&editor.notebook)
+        .build();
     let scroller = ScrolledWindow::builder()
         .hexpand(true)
         .vexpand(true)
+        .hscrollbar_policy(gtk4::PolicyType::Never)
+        .child(&clamp)
         .build();
-    scroller.set_child(Some(&editor.notebook));
 
     {
         let st = state.clone();
@@ -51,25 +57,62 @@ pub fn show_main_window(app: &impl IsA<Application>) {
 
     let buttons = build_action_buttons();
 
-    let main_paned = Paned::new(Orientation::Horizontal);
-    main_paned.set_start_child(Some(&list_mgr.sidebar.container));
-    main_paned.set_end_child(Some(&scroller));
-    main_paned.set_position(250);
-    main_paned.set_shrink_start_child(false);
-    main_paned.set_shrink_end_child(false);
-    main_paned.set_hexpand(true);
-    main_paned.set_vexpand(true);
+    // Sidebar page: launcher list with file actions and the primary menu.
+    let sidebar_header = AdwHeaderBar::new();
+    sidebar_header.pack_start(&toolbar_data.btn_new);
+    sidebar_header.pack_start(&toolbar_data.btn_open);
+    sidebar_header.pack_end(&menu_button);
+    sidebar_header.pack_end(&toolbar_data.btn_refresh);
+    let sidebar_view = ToolbarView::new();
+    sidebar_view.add_top_bar(&sidebar_header);
+    sidebar_view.set_content(Some(&list_mgr.sidebar.container));
+    let sidebar_page = NavigationPage::builder()
+        .title("Launcher Studio")
+        .tag("sidebar")
+        .child(&sidebar_view)
+        .build();
 
-    root.append(&menubar);
-    root.append(&toolbar_data.container);
-    root.append(&main_paned);
-    root.append(&buttons.container);
-    root.append(&status_data.container);
+    // Content page: editor with save/preview/delete and status in a bottom bar.
+    let content_header = AdwHeaderBar::new();
+    content_header.pack_end(&theme::create_theme_button());
+    let bottom_bar = GtkBox::new(Orientation::Vertical, 6);
+    bottom_bar.set_margin_top(6);
+    bottom_bar.set_margin_bottom(6);
+    bottom_bar.set_margin_start(12);
+    bottom_bar.set_margin_end(12);
+    bottom_bar.append(&buttons.container);
+    bottom_bar.append(&status_data.container);
+    let content_view = ToolbarView::new();
+    content_view.add_top_bar(&content_header);
+    content_view.set_content(Some(&scroller));
+    content_view.add_bottom_bar(&bottom_bar);
+    let content_page = NavigationPage::builder()
+        .title("Editor")
+        .tag("editor")
+        .child(&content_view)
+        .build();
 
-    let toolbar_view = ToolbarView::new();
-    toolbar_view.add_top_bar(&header);
-    toolbar_view.set_content(Some(&root));
-    win.set_content(Some(&toolbar_view));
+    let split_view = NavigationSplitView::builder()
+        .sidebar(&sidebar_page)
+        .content(&content_page)
+        .min_sidebar_width(280.0)
+        .max_sidebar_width(380.0)
+        .build();
+    win.set_content(Some(&split_view));
+
+    let compact_form = Breakpoint::new(
+        BreakpointCondition::parse(COMPACT_FORM_CONDITION).expect("valid breakpoint condition"),
+    );
+    editor.compact.add_setters(&compact_form);
+    win.add_breakpoint(compact_form);
+
+    // Added last so it wins when both conditions match.
+    let collapsed = Breakpoint::new(
+        BreakpointCondition::parse(COLLAPSED_CONDITION).expect("valid breakpoint condition"),
+    );
+    collapsed.add_setter(&split_view, "collapsed", Some(&true.to_value()));
+    editor.compact.add_setters(&collapsed);
+    win.add_breakpoint(collapsed);
 
     let widgets = editor.widgets.clone();
     let listbox = list_mgr.sidebar.listbox.clone();
@@ -119,6 +162,7 @@ pub fn show_main_window(app: &impl IsA<Application>) {
     );
     connect_toolbar_buttons(&app, &toolbar_data, refresh_list.clone());
     connect_sidebar(&listbox, &widgets, state.clone(), &status_label);
+    connect_show_editor(&app, &listbox, &split_view);
     connect_action_buttons(
         &buttons,
         &widgets,
@@ -169,12 +213,26 @@ fn connect_toolbar_buttons(
     toolbar.btn_open.connect_clicked(move |_| {
         a.activate_action("open", None);
     });
-    let a = app.clone();
-    toolbar.btn_save.connect_clicked(move |_| {
-        a.activate_action("save", None);
-    });
     let rl = refresh_list.clone();
     toolbar.btn_refresh.connect_clicked(move |_| rl());
+}
+// When collapsed, only one page is visible: jump to the editor once something is loaded.
+fn connect_show_editor(
+    app: &Application,
+    listbox: &gtk4::ListBox,
+    split_view: &NavigationSplitView,
+) {
+    let sv = split_view.clone();
+    listbox.connect_row_activated(move |_, _| sv.set_show_content(true));
+    for name in ["new", "open", "import_system"] {
+        if let Some(action) = app
+            .lookup_action(name)
+            .and_downcast::<gtk4::gio::SimpleAction>()
+        {
+            let sv = split_view.clone();
+            action.connect_activate(move |_, _| sv.set_show_content(true));
+        }
+    }
 }
 fn connect_sidebar(
     listbox: &gtk4::ListBox,

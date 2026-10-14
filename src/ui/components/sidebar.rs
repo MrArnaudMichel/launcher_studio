@@ -12,6 +12,10 @@ pub struct Sidebar {
     pub btn_home: ToggleButton,
     pub btn_system: ToggleButton,
     pub btn_flatpak: ToggleButton,
+    pub count_all: Label,
+    pub count_home: Label,
+    pub count_system: Label,
+    pub count_flatpak: Label,
     pub count_label: Label,
     pub stack: Stack,
     pub clear_btn: Button,
@@ -19,10 +23,11 @@ pub struct Sidebar {
 
 pub fn build_sidebar() -> Sidebar {
     let container = GtkBox::new(Orientation::Vertical, 8);
+    container.set_margin_top(6);
+    container.set_margin_bottom(12);
+    container.set_margin_start(12);
     container.set_margin_end(12);
     container.set_vexpand(true);
-    container.set_hexpand(false);
-    container.set_size_request(280, -1);
 
     // Search bar
     let search_entry = SearchEntry::new();
@@ -35,21 +40,21 @@ pub fn build_sidebar() -> Sidebar {
     filter_bar.add_css_class("linked");
     filter_bar.set_hexpand(true);
 
-    let btn_all = ToggleButton::with_label("All");
+    let (btn_all, count_all) = filter_button("All");
     btn_all.set_tooltip_text(Some("Show all launchers"));
     btn_all.set_hexpand(true);
 
-    let btn_home = ToggleButton::with_label("Home");
+    let (btn_home, count_home) = filter_button("Home");
     btn_home.set_tooltip_text(Some("Show user launchers (~/.local/share/applications)"));
     btn_home.set_group(Some(&btn_all));
     btn_home.set_hexpand(true);
 
-    let btn_system = ToggleButton::with_label("/usr");
+    let (btn_system, count_system) = filter_button("/usr");
     btn_system.set_tooltip_text(Some("Show system launchers (/usr/share/applications)"));
     btn_system.set_group(Some(&btn_all));
     btn_system.set_hexpand(true);
 
-    let btn_flatpak = ToggleButton::with_label("Flatpak");
+    let (btn_flatpak, count_flatpak) = filter_button("Flatpak");
     btn_flatpak.set_tooltip_text(Some("Show Flatpak application launchers"));
     btn_flatpak.set_group(Some(&btn_all));
     btn_flatpak.set_hexpand(true);
@@ -77,7 +82,6 @@ pub fn build_sidebar() -> Sidebar {
     stack.set_hexpand(true);
 
     let scroller = ScrolledWindow::builder()
-        .min_content_width(260)
         .vexpand(true)
         .hexpand(true)
         .build();
@@ -152,8 +156,25 @@ pub fn build_sidebar() -> Sidebar {
         btn_home,
         btn_system,
         btn_flatpak,
+        count_all,
+        count_home,
+        count_system,
+        count_flatpak,
         count_label,
         stack,
         clear_btn,
     }
+}
+
+// Filter toggle with the location name above a small count, so four fit on a phone.
+fn filter_button(name: &str) -> (ToggleButton, Label) {
+    let content = GtkBox::new(Orientation::Vertical, 0);
+    content.append(&Label::new(Some(name)));
+    let count = Label::new(Some("–"));
+    count.add_css_class("caption");
+    count.add_css_class("numeric");
+    content.append(&count);
+    let btn = ToggleButton::new();
+    btn.set_child(Some(&content));
+    (btn, count)
 }

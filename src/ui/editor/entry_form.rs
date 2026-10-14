@@ -4,8 +4,8 @@ use gtk4::gdk;
 use gtk4::gio::File;
 use gtk4::prelude::*;
 use gtk4::{
-    Box as GtkBox, Button, CheckButton, ComboBoxText, Entry, EntryIconPosition, FileChooserAction,
-    FileChooserDialog, Label, Notebook, Orientation, ScrolledWindow, TextView,
+    Align, Box as GtkBox, Button, CheckButton, ComboBoxText, Entry, EntryIconPosition,
+    FileChooserAction, FileChooserDialog, Label, Notebook, Orientation, ScrolledWindow, TextView,
 };
 use std::cell::RefCell;
 use std::fs;
@@ -14,9 +14,48 @@ pub struct Editor {
     pub notebook: Notebook,
     pub source_view: TextView,
     pub widgets: EntryWidgets,
+    pub compact: CompactLayout,
+}
+/// Form rows that reflow to "label above field" when a breakpoint applies.
+#[derive(Default)]
+pub struct CompactLayout {
+    rows: Vec<GtkBox>,
+    labels: Vec<Label>,
+    spacers: Vec<Label>,
+}
+impl CompactLayout {
+    fn track_row(&mut self, row: GtkBox) -> GtkBox {
+        if let Some(lbl) = row.first_child().and_downcast::<Label>() {
+            self.labels.push(lbl);
+        }
+        self.rows.push(row.clone());
+        row
+    }
+    fn track_check_row(&mut self, row: GtkBox) -> GtkBox {
+        if let Some(spacer) = row.first_child().and_downcast::<Label>() {
+            self.spacers.push(spacer);
+        }
+        row
+    }
+    pub fn add_setters(&self, bp: &adw::Breakpoint) {
+        let vertical = Orientation::Vertical.to_value();
+        for row in &self.rows {
+            bp.add_setter(row, "orientation", Some(&vertical));
+            bp.add_setter(row, "spacing", Some(&4i32.to_value()));
+        }
+        for lbl in &self.labels {
+            bp.add_setter(lbl, "width-chars", Some(&(-1i32).to_value()));
+            bp.add_setter(lbl, "xalign", Some(&0.0f32.to_value()));
+            bp.add_setter(lbl, "halign", Some(&Align::Start.to_value()));
+        }
+        for spacer in &self.spacers {
+            bp.add_setter(spacer, "visible", Some(&false.to_value()));
+        }
+    }
 }
 pub fn build_editor() -> Editor {
     let notebook = Notebook::new();
+    let mut compact = CompactLayout::default();
     let (basic_box, advanced_box) = (create_tab_box(), create_tab_box());
     let source_view = create_source_view();
     let type_combo = create_type_combo();
@@ -71,62 +110,85 @@ pub fn build_editor() -> Editor {
     let exec_row = build_dynamic_exec_row(&exec_lbl, &exec_app_box, &exec_link_box);
     setup_icon_preview(&icon_entry);
     setup_path_url_buttons(&path_entry, &url_entry);
-    let icon_row = build_icon_row(&icon_entry);
-    basic_box.append(&build_type_row(&type_combo));
-    basic_box.append(&crate::ui::components::labeled_entry_with(
-        "Name*",
-        &name_entry,
-    ));
-    basic_box.append(&exec_row);
-    basic_box.append(&icon_row);
-    basic_box.append(&build_check_row(&terminal_check));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "Generic Name",
-        &generic_name_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "Comment",
-        &comment_entry,
-    ));
-    advanced_box.append(&build_check_row(&nodisplay_check));
-    advanced_box.append(&build_check_row(&startup_check));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "Categories (;)",
-        &categories_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "MimeType (;)",
-        &mimetype_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "Keywords (;)",
-        &keywords_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "OnlyShowIn (;)",
-        &onlyshowin_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "NotShowIn (;)",
-        &notshowin_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "TryExec",
-        &tryexec_entry,
-    ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "Working Dir",
-        &path_entry,
-    ));
+    let (icon_row, icon_controls) = build_icon_row(&icon_entry);
+    compact.rows.push(icon_controls);
+    basic_box.append(&compact.track_row(build_type_row(&type_combo)));
+    basic_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Name*",
+            &name_entry,
+        )),
+    );
+    basic_box.append(&compact.track_row(exec_row));
+    basic_box.append(&compact.track_row(icon_row));
+    basic_box.append(&compact.track_check_row(build_check_row(&terminal_check)));
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Generic Name",
+            &generic_name_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Comment",
+            &comment_entry,
+        )),
+    );
+    advanced_box.append(&compact.track_check_row(build_check_row(&nodisplay_check)));
+    advanced_box.append(&compact.track_check_row(build_check_row(&startup_check)));
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Categories (;)",
+            &categories_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "MimeType (;)",
+            &mimetype_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Keywords (;)",
+            &keywords_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "OnlyShowIn (;)",
+            &onlyshowin_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "NotShowIn (;)",
+            &notshowin_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "TryExec",
+            &tryexec_entry,
+        )),
+    );
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Working Dir",
+            &path_entry,
+        )),
+    );
     advanced_box.append(&build_localized_section(
         &localized_name,
         &localized_gname,
         &localized_comment,
     ));
-    advanced_box.append(&crate::ui::components::labeled_entry_with(
-        "Actions (;)",
-        &actions_entry,
-    ));
+    advanced_box.append(
+        &compact.track_row(crate::ui::components::labeled_entry_with(
+            "Actions (;)",
+            &actions_entry,
+        )),
+    );
     advanced_box.append(&Label::new(Some("Extra key=value lines")));
     advanced_box.append(&wrap_scrolled(&extra_kv));
     let basic_scroll = wrap_scroll_vexpand(&basic_box);
@@ -176,6 +238,7 @@ pub fn build_editor() -> Editor {
         notebook,
         source_view,
         widgets,
+        compact,
     }
 }
 fn create_tab_box() -> GtkBox {
@@ -282,14 +345,19 @@ fn build_dynamic_exec_row(lbl: &Label, app_box: &GtkBox, link_box: &GtkBox) -> G
 }
 use crate::ui::editor::icon_picker::IconPickerDialog;
 
-fn build_icon_row(icon_entry: &Entry) -> GtkBox {
+// Returns the row and its inner controls box (entry + buttons), which also reflows when compact.
+fn build_icon_row(icon_entry: &Entry) -> (GtkBox, GtkBox) {
     let row = GtkBox::new(Orientation::Horizontal, 8);
     let lbl = Label::new(Some("Icon"));
     lbl.set_halign(gtk4::Align::End);
     lbl.set_xalign(1.0);
     lbl.set_width_chars(18);
     row.append(&lbl);
-    row.append(icon_entry);
+    let controls = GtkBox::new(Orientation::Horizontal, 8);
+    controls.set_hexpand(true);
+    controls.append(icon_entry);
+    let buttons = GtkBox::new(Orientation::Horizontal, 8);
+    buttons.set_homogeneous(true);
 
     let btn_browse = Button::with_label("Browse...");
     {
@@ -298,7 +366,7 @@ fn build_icon_row(icon_entry: &Entry) -> GtkBox {
             show_file_chooser(&e, "Select Icon File", FileChooserAction::Open, false)
         });
     }
-    row.append(&btn_browse);
+    buttons.append(&btn_browse);
 
     let btn_picker = Button::with_label("Lucide Icons...");
     {
@@ -313,9 +381,11 @@ fn build_icon_row(icon_entry: &Entry) -> GtkBox {
             });
         });
     }
-    row.append(&btn_picker);
+    buttons.append(&btn_picker);
+    controls.append(&buttons);
+    row.append(&controls);
 
-    row
+    (row, controls)
 }
 fn show_file_chooser(entry: &Entry, title: &str, action: FileChooserAction, prefix_file: bool) {
     let parent_window = entry.root().and_downcast::<gtk4::Window>();
