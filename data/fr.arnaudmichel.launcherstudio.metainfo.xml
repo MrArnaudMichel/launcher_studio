@@ -71,6 +71,21 @@
   </screenshots>
 
   <releases>
+    <release version="0.1.6" date="2026-09-10">
+      <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.6</url>
+        <description>
+          <p>Added mobile and tablet portability with adaptive interface and improved touch controls</p>
+          <p xml:lang="fr">Ajout de la portabilité sur mobile et tablette avec une interface adaptative et des contrôles tactiles améliorés</p>
+          <ul>
+            <li>Adaptive layout that adjusts to different screen sizes and orientations</li>
+            <li xml:lang="fr">Mise en page adaptative qui s'adapte à différentes tailles d'écran et orientations</li>
+            <li>Enhanced touch controls for better usability on touch-enabled devices</li>
+            <li xml:lang="fr">Contrôles tactiles améliorés pour une meilleure utilisation sur les appareils tactiles</li>
+            <li>Update the brand color in the banner to a more vibrant shade to fit the flathub branding guidelines</li>
+            <li xml:lang="fr">Mise à jour de la couleur de la bannière de marque vers une teinte plus vive pour s'adapter aux directives de marque de flathub</li>
+          </ul>
+        </description>
+    </release>
     <release version="0.1.5" date="2026-09-10">
       <url type="details">https://github.com/MrArnaudMichel/LauncherStudio/releases/tag/v0.1.5</url>
       <description>
